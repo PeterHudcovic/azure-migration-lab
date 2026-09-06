@@ -1,0 +1,8 @@
+replicaCount: 1
+
+environment: dev
+
+image:
+  repository: acrmigrationlab.azurecr.io/migration-app
+  tag: latest
+  pullPolicy: IfNotPresent
