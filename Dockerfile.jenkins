@@ -1,0 +1,25 @@
+FROM jenkins/jenkins:lts
+
+USER root
+
+# Zakladne utility + Docker CLI (Command-Line Interface)
+RUN apt-get update && \
+    apt-get install -y \
+        docker.io \
+        curl \
+        ca-certificates \
+        gnupg \
+        lsb-release \
+        apt-transport-https && \
+    rm -rf /var/lib/apt/lists/*
+
+# Azure CLI (Command-Line Interface)
+RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash
+
+# kubectl - klient pre Kubernetes a AKS (Azure Kubernetes Service)
+RUN az aks install-cli
+
+# Helm - package manager pre Kubernetes
+RUN curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
+USER jenkins
