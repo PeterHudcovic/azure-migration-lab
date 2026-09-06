@@ -2,20 +2,19 @@ pipeline {
     agent any
 
     environment {
-        ACR_NAME       = 'acrmigrationlab'
-        ACR_SERVER     = 'acrmigrationlab.azurecr.io'
-        IMAGE_NAME     = 'migration-app'
+        ACR_NAME = 'acrmigrationlab'
+        ACR_SERVER = 'acrmigrationlab.azurecr.io'
+        IMAGE_NAME = 'migration-app'
         RESOURCE_GROUP = 'rg-migration-lab'
-        AKS_CLUSTER    = 'aks-migration-lab'
+        AKS_CLUSTER = 'aks-migration-lab'
+        KEY_VAULT_NAME = 'kv-migration-lab'
 
-        AZURE_CLIENT_ID     = credentials('azure-client-id')
+        AZURE_CLIENT_ID = credentials('azure-client-id')
         AZURE_CLIENT_SECRET = credentials('azure-client-secret')
-        AZURE_TENANT_ID     = credentials('azure-tenant-id')
-        POSTGRES_PASSWORD   = credentials('postgres-password')
+        AZURE_TENANT_ID = credentials('azure-tenant-id')
     }
 
     stages {
-
         stage('Build Docker Image') {
             steps {
                 sh '''
@@ -37,6 +36,20 @@ pipeline {
             }
         }
 
+        stage('Get PostgreSQL Secret from Key Vault') {
+            steps {
+                sh '''
+                    POSTGRES_PASSWORD=$(az keyvault secret show \
+                      --vault-name $KEY_VAULT_NAME \
+                      --name postgres-password \
+                      --query value \
+                      -o tsv)
+
+                    echo "$POSTGRES_PASSWORD" > /tmp/postgres-password
+                '''
+            }
+        }
+
         stage('Push Image to ACR') {
             steps {
                 sh '''
@@ -54,6 +67,8 @@ pipeline {
                       --name $AKS_CLUSTER \
                       --overwrite-existing
 
+                    POSTGRES_PASSWORD=$(cat /tmp/postgres-password)
+
                     helm upgrade --install migration-app ./helm/migration-app \
                       --set image.repository=$ACR_SERVER/$IMAGE_NAME \
                       --set image.tag=$BUILD_NUMBER \
@@ -69,6 +84,12 @@ pipeline {
                     kubectl rollout status deployment/migration-app
                 '''
             }
+        }
+    }
+
+    post {
+        always {
+            sh 'rm -f /tmp/postgres-password'
         }
     }
 }
