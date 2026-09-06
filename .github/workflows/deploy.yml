@@ -1,0 +1,50 @@
+name: Build and Deploy to AKS
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Login to ACR
+        run: az acr login --name acrmigrationlab
+
+      - name: Build Docker image
+        run: |
+          docker build \
+            -t acrmigrationlab.azurecr.io/migration-app:${{ github.sha }} \
+            ./app
+
+      - name: Push Docker image
+        run: |
+          docker push \
+            acrmigrationlab.azurecr.io/migration-app:${{ github.sha }}
+
+      - name: Get AKS credentials
+        run: |
+          az aks get-credentials \
+            --resource-group rg-migration-lab \
+            --name aks-migration-lab \
+            --overwrite-existing
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v4
+
+      - name: Deploy with Helm
+        run: |
+          helm upgrade --install migration-app ./helm/migration-app \
+            --set image.repository=acrmigrationlab.azurecr.io/migration-app \
+            --set image.tag=${{ github.sha }} \
+            --set-string postgresql.password="${{ secrets.POSTGRES_PASSWORD }}"
