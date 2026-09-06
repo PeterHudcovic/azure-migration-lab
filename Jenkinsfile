@@ -31,21 +31,8 @@ pipeline {
                     az login --service-principal \
                       --username "$AZURE_CLIENT_ID" \
                       --password "$AZURE_CLIENT_SECRET" \
-                      --tenant "$AZURE_TENANT_ID"
-                '''
-            }
-        }
-
-        stage('Get PostgreSQL Secret from Key Vault') {
-            steps {
-                sh '''
-                    POSTGRES_PASSWORD=$(az keyvault secret show \
-                      --vault-name $KEY_VAULT_NAME \
-                      --name postgres-password \
-                      --query value \
-                      -o tsv)
-
-                    echo "$POSTGRES_PASSWORD" > /tmp/postgres-password
+                      --tenant "$AZURE_TENANT_ID" \
+                      --output none
                 '''
             }
         }
@@ -62,17 +49,26 @@ pipeline {
         stage('Deploy to AKS') {
             steps {
                 sh '''
+                    set +x
+
                     az aks get-credentials \
                       --resource-group $RESOURCE_GROUP \
                       --name $AKS_CLUSTER \
                       --overwrite-existing
 
-                    POSTGRES_PASSWORD=$(cat /tmp/postgres-password)
+                    POSTGRES_PASSWORD=$(az keyvault secret show \
+                      --vault-name $KEY_VAULT_NAME \
+                      --name postgres-password \
+                      --query value \
+                      --output tsv)
 
                     helm upgrade --install migration-app ./helm/migration-app \
                       --set image.repository=$ACR_SERVER/$IMAGE_NAME \
                       --set image.tag=$BUILD_NUMBER \
                       --set-string postgresql.password="$POSTGRES_PASSWORD"
+
+                    unset POSTGRES_PASSWORD
+                    set -x
                 '''
             }
         }
@@ -84,12 +80,6 @@ pipeline {
                     kubectl rollout status deployment/migration-app
                 '''
             }
-        }
-    }
-
-    post {
-        always {
-            sh 'rm -f /tmp/postgres-password'
         }
     }
 }
