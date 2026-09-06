@@ -1,1 +1,36 @@
-code helm\migration-app\values-prod.yaml
+replicaCount: 2
+
+environment: prod
+
+image:
+  repository: acrmigrationlab.azurecr.io/migration-app
+  tag: "3"
+  pullPolicy: IfNotPresent
+
+serviceAccount:
+  create: false
+  automount: true
+  annotations: {}
+  name: migration-app-sa
+
+podLabels:
+  azure.workload.identity/use: "true"
+
+databaseSecretName: migration-app-keyvault-secret
+
+keyVault:
+  enabled: true
+  name: kv-migration-lab
+  clientId: "6d4b4966-807d-408d-a800-93a9aa4d9281"
+  tenantId: "3bdeb384-5dba-4624-a330-01211232fa30"
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations: {}
+  hosts:
+    - host: ""
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []

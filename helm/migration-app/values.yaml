@@ -29,6 +29,8 @@ service:
 
 containerPort: 8080
 
+databaseSecretName: migration-postgresql-secret
+
 postgresql:
   enabled: true
   image: postgres:16
@@ -36,6 +38,12 @@ postgresql:
   username: migrationuser
   password: ""
   storage: 5Gi
+
+keyVault:
+  enabled: false
+  name: ""
+  clientId: ""
+  tenantId: ""
 
 ingress:
   enabled: false

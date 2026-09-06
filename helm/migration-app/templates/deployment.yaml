@@ -69,7 +69,7 @@ spec:
             - name: DB_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: migration-postgresql-secret
+                  name: {{ .Values.databaseSecretName }}
                   key: POSTGRES_PASSWORD
 
           ports:
@@ -92,14 +92,31 @@ spec:
             {{- toYaml . | nindent 12 }}
           {{- end }}
 
+          {{- if .Values.keyVault.enabled }}
+          volumeMounts:
+            - name: secrets-store
+              mountPath: "/mnt/secrets-store"
+              readOnly: true
+          {{- else }}
           {{- with .Values.volumeMounts }}
           volumeMounts:
             {{- toYaml . | nindent 12 }}
           {{- end }}
+          {{- end }}
 
+      {{- if .Values.keyVault.enabled }}
+      volumes:
+        - name: secrets-store
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: {{ include "migration-app.fullname" . }}-keyvault
+      {{- else }}
       {{- with .Values.volumes }}
       volumes:
         {{- toYaml . | nindent 8 }}
+      {{- end }}
       {{- end }}
 
       {{- with .Values.nodeSelector }}
@@ -115,4 +132,4 @@ spec:
       {{- with .Values.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
-        {{- end }}
+      {{- end }}

@@ -1,5 +1,6 @@
 apiVersion: apps/v1
 kind: StatefulSet
+
 metadata:
   name: migration-postgresql
 
@@ -15,8 +16,13 @@ spec:
     metadata:
       labels:
         app: migration-postgresql
+        {{- if .Values.keyVault.enabled }}
+        azure.workload.identity/use: "true"
+        {{- end }}
 
     spec:
+      serviceAccountName: {{ include "migration-app.serviceAccountName" . }}
+
       containers:
         - name: postgresql
           image: {{ .Values.postgresql.image }}
@@ -34,7 +40,7 @@ spec:
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: migration-postgresql-secret
+                  name: {{ .Values.databaseSecretName }}
                   key: POSTGRES_PASSWORD
 
             - name: PGDATA
@@ -43,6 +49,22 @@ spec:
           volumeMounts:
             - name: postgres-data
               mountPath: /var/lib/postgresql/data
+
+            {{- if .Values.keyVault.enabled }}
+            - name: secrets-store
+              mountPath: /mnt/secrets-store
+              readOnly: true
+            {{- end }}
+
+      {{- if .Values.keyVault.enabled }}
+      volumes:
+        - name: secrets-store
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: {{ include "migration-app.fullname" . }}-keyvault
+      {{- end }}
 
   volumeClaimTemplates:
     - metadata:
