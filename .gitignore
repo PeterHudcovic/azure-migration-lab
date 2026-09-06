@@ -23,4 +23,3 @@ override.tf.json
 *_override.tf
 *_override.tf.json
 
-helm/migration-app/templates/postgresql-secret.yaml
