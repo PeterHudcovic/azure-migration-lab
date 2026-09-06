@@ -1,0 +1,17 @@
+---
+- name: Azure Migration Lab configuration
+  hosts: local
+  gather_facts: false
+
+  tasks:
+    - name: Verify Ansible execution
+      ansible.builtin.debug:
+        msg: "Ansible configuration completed successfully"
+
+    - name: Verify required deployment tools
+      ansible.builtin.command: "{{ item }} --version"
+      loop:
+        - docker
+        - kubectl
+        - helm
+      changed_when: false
