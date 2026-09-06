@@ -54,6 +54,18 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
 
           env:
+            - name: DB_HOST
+              value: "migration-postgresql"
+
+            - name: DB_PORT
+              value: "5432"
+
+            - name: DB_NAME
+              value: {{ .Values.postgresql.database | quote }}
+
+            - name: DB_USER
+              value: {{ .Values.postgresql.username | quote }}
+
             - name: DB_PASSWORD
               valueFrom:
                 secretKeyRef:
@@ -103,4 +115,4 @@ spec:
       {{- with .Values.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- end }}
