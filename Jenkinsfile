@@ -2,19 +2,19 @@ pipeline {
     agent any
 
     environment {
-        ACR_NAME = 'acrmigrationlab'
-        ACR_SERVER = 'acrmigrationlab.azurecr.io'
-        IMAGE_NAME = 'migration-app'
+        ACR_NAME       = 'acrmigrationlab'
+        ACR_SERVER     = 'acrmigrationlab.azurecr.io'
+        IMAGE_NAME     = 'migration-app'
         RESOURCE_GROUP = 'rg-migration-lab'
-        AKS_CLUSTER = 'aks-migration-lab'
+        AKS_CLUSTER    = 'aks-migration-lab'
+
+        AZURE_CLIENT_ID     = credentials('azure-client-id')
+        AZURE_CLIENT_SECRET = credentials('azure-client-secret')
+        AZURE_TENANT_ID     = credentials('azure-tenant-id')
+        POSTGRES_PASSWORD   = credentials('postgres-password')
     }
 
     stages {
-        stage('Checkout') {
-            steps {
-                checkout scm
-            }
-        }
 
         stage('Build Docker Image') {
             steps {
@@ -62,7 +62,7 @@ pipeline {
             }
         }
 
-        stage('Verify') {
+        stage('Verify Deployment') {
             steps {
                 sh '''
                     kubectl get pods
