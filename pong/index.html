@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pong Deployment Demo</title>
+  <style>
+    :root {
+      --bg: #f6f1fb;
+      --panel: #eee5f7;
+      --accent: #8b5cf6;
+      --accent-dark: #6d3ed8;
+      --border: #c4b5d9;
+      --text: #111111;
+      --muted: #5b5563;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Consolas, "Courier New", monospace;
+      min-height: 100vh;
+    }
+
+    .shell {
+      width: min(1100px, 94vw);
+      margin: 28px auto;
+    }
+
+    .terminal {
+      border: 1px solid var(--border);
+      background: var(--panel);
+      box-shadow: 0 8px 30px rgba(65, 40, 90, 0.08);
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      align-items: center;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      background: #e8ddf3;
+    }
+
+    .title {
+      font-weight: 700;
+      letter-spacing: 0.03em;
+    }
+
+    .status {
+      color: var(--accent-dark);
+      font-size: 13px;
+    }
+
+    .content {
+      padding: 18px;
+    }
+
+    .intro {
+      line-height: 1.6;
+      color: var(--muted);
+      margin-bottom: 18px;
+    }
+
+    .prompt {
+      color: var(--accent-dark);
+      font-weight: 700;
+    }
+
+    .game-wrap {
+      display: grid;
+      grid-template-columns: 1fr 280px;
+      gap: 18px;
+    }
+
+    canvas {
+      width: 100%;
+      max-width: 760px;
+      aspect-ratio: 16 / 9;
+      display: block;
+      background: #111111;
+      border: 2px solid var(--accent);
+    }
+
+    .panel {
+      background: #faf7fd;
+      border: 1px solid var(--border);
+      padding: 16px;
+    }
+
+    .panel h3 {
+      margin-top: 0;
+      color: var(--accent-dark);
+      font-size: 15px;
+    }
+
+    .kv {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 8px 12px;
+      font-size: 13px;
+    }
+
+    .kv span:nth-child(odd) { color: var(--muted); }
+
+    button {
+      width: 100%;
+      margin-top: 14px;
+      padding: 11px;
+      border: 1px solid var(--accent-dark);
+      background: var(--accent);
+      color: white;
+      font: inherit;
+      cursor: pointer;
+    }
+
+    button:hover { background: var(--accent-dark); }
+
+    .help {
+      margin-top: 16px;
+      font-size: 12px;
+      line-height: 1.6;
+      color: var(--muted);
+    }
+
+    @media (max-width: 850px) {
+      .game-wrap { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="terminal">
+      <div class="topbar">
+        <div class="title">AZURE MIGRATION LAB :: PONG DEPLOYMENT DEMO</div>
+        <div class="status" id="buildInfo">build: runtime</div>
+      </div>
+
+      <div class="content">
+        <div class="intro">
+          <span class="prompt">peter@aks:~$</span>
+          A small browser game used as a live Kubernetes rolling-deployment target.
+          Scheduled CI/CD builds a new container image, pushes it to Azure Container Registry,
+          and updates the AKS deployment without taking the application offline.
+        </div>
+
+        <div class="game-wrap">
+          <canvas id="game" width="960" height="540"></canvas>
+
+          <div class="panel">
+            <h3>GAME STATUS</h3>
+            <div class="kv">
+              <span>Player 1</span><strong id="leftScore">0</strong>
+              <span>Player 2</span><strong id="rightScore">0</strong>
+              <span>State</span><strong id="gameState">READY</strong>
+              <span>Path</span><strong>/pong</strong>
+            </div>
+
+            <button id="restartBtn">RESTART MATCH</button>
+
+            <div class="help">
+              <strong>Controls</strong><br>
+              Player 1: W / S<br>
+              Player 2: ↑ / ↓<br><br>
+              Refresh this page while the scheduled rollout runs.
+              The game remains reachable while Kubernetes replaces Pods.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+const W = canvas.width;
+const H = canvas.height;
+
+const paddle = {
+  width: 16,
+  height: 110,
+  speed: 7
+};
+
+const left = { x: 35, y: H/2 - paddle.height/2, score: 0 };
+const right = { x: W - 35 - paddle.width, y: H/2 - paddle.height/2, score: 0 };
+
+const ball = {
+  x: W/2,
+  y: H/2,
+  r: 10,
+  vx: 5,
+  vy: 3.5
+};
+
+const keys = {};
+let running = true;
+
+document.addEventListener("keydown", e => {
+  keys[e.key.toLowerCase()] = true;
+  if (["arrowup","arrowdown"].includes(e.key.toLowerCase())) e.preventDefault();
+});
+
+document.addEventListener("keyup", e => {
+  keys[e.key.toLowerCase()] = false;
+});
+
+document.getElementById("restartBtn").addEventListener("click", resetMatch);
+
+function resetBall(direction = 1) {
+  ball.x = W/2;
+  ball.y = H/2;
+  ball.vx = 5 * direction;
+  ball.vy = (Math.random() * 5) - 2.5;
+}
+
+function resetMatch() {
+  left.score = 0;
+  right.score = 0;
+  left.y = H/2 - paddle.height/2;
+  right.y = H/2 - paddle.height/2;
+  resetBall(Math.random() > 0.5 ? 1 : -1);
+  updateScore();
+  document.getElementById("gameState").textContent = "RUNNING";
+}
+
+function updateScore() {
+  document.getElementById("leftScore").textContent = left.score;
+  document.getElementById("rightScore").textContent = right.score;
+}
+
+function clamp(v, min, max) {
+  return Math.max(min, Math.min(max, v));
+}
+
+function update() {
+  if (!running) return;
+
+  if (keys["w"]) left.y -= paddle.speed;
+  if (keys["s"]) left.y += paddle.speed;
+  if (keys["arrowup"]) right.y -= paddle.speed;
+  if (keys["arrowdown"]) right.y += paddle.speed;
+
+  left.y = clamp(left.y, 0, H - paddle.height);
+  right.y = clamp(right.y, 0, H - paddle.height);
+
+  ball.x += ball.vx;
+  ball.y += ball.vy;
+
+  if (ball.y - ball.r <= 0 || ball.y + ball.r >= H) {
+    ball.vy *= -1;
+  }
+
+  const hitLeft =
+    ball.x - ball.r <= left.x + paddle.width &&
+    ball.x > left.x &&
+    ball.y >= left.y &&
+    ball.y <= left.y + paddle.height &&
+    ball.vx < 0;
+
+  const hitRight =
+    ball.x + ball.r >= right.x &&
+    ball.x < right.x + paddle.width &&
+    ball.y >= right.y &&
+    ball.y <= right.y + paddle.height &&
+    ball.vx > 0;
+
+  if (hitLeft) {
+    ball.vx = Math.abs(ball.vx) * 1.03;
+    const offset = (ball.y - (left.y + paddle.height / 2)) / (paddle.height / 2);
+    ball.vy = offset * 6;
+  }
+
+  if (hitRight) {
+    ball.vx = -Math.abs(ball.vx) * 1.03;
+    const offset = (ball.y - (right.y + paddle.height / 2)) / (paddle.height / 2);
+    ball.vy = offset * 6;
+  }
+
+  if (ball.x < -30) {
+    right.score++;
+    updateScore();
+    resetBall(1);
+  }
+
+  if (ball.x > W + 30) {
+    left.score++;
+    updateScore();
+    resetBall(-1);
+  }
+}
+
+function draw() {
+  ctx.clearRect(0,0,W,H);
+
+  ctx.fillStyle = "#111111";
+  ctx.fillRect(0,0,W,H);
+
+  ctx.strokeStyle = "#8b5cf6";
+  ctx.setLineDash([14,14]);
+  ctx.beginPath();
+  ctx.moveTo(W/2,0);
+  ctx.lineTo(W/2,H);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  ctx.fillStyle = "#f6f1fb";
+  ctx.fillRect(left.x, left.y, paddle.width, paddle.height);
+  ctx.fillRect(right.x, right.y, paddle.width, paddle.height);
+
+  ctx.beginPath();
+  ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI*2);
+  ctx.fillStyle = "#b794f6";
+  ctx.fill();
+
+  ctx.font = "32px Consolas, monospace";
+  ctx.fillStyle = "#f6f1fb";
+  ctx.fillText(left.score, W/2 - 70, 55);
+  ctx.fillText(right.score, W/2 + 48, 55);
+}
+
+function loop() {
+  update();
+  draw();
+  requestAnimationFrame(loop);
+}
+
+document.getElementById("gameState").textContent = "RUNNING";
+loop();
+</script>
+</body>
+</html>

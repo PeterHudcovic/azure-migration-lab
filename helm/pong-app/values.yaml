@@ -1,0 +1,32 @@
+replicaCount: 2
+
+image:
+  repository: acrmigrationlab.azurecr.io/pong-app
+  tag: "initial"
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8080
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/use-regex: "true"
+  path: /pong(/|$)(.*)
+  pathType: ImplementationSpecific
+
+resources:
+  requests:
+    cpu: 20m
+    memory: 32Mi
+  limits:
+    cpu: 100m
+    memory: 64Mi
+
+strategy:
+  maxUnavailable: 0
+  maxSurge: 1

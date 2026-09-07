@@ -1,0 +1,40 @@
+name: Manual Pong Build and Deploy
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Login to ACR
+        run: az acr login --name acrmigrationlab
+
+      - name: Build Pong image
+        run: docker build -t acrmigrationlab.azurecr.io/pong-app:run-${{ github.run_number }} ./pong
+
+      - name: Push Pong image
+        run: docker push acrmigrationlab.azurecr.io/pong-app:run-${{ github.run_number }}
+
+      - name: Get AKS credentials
+        run: az aks get-credentials --resource-group rg-migration-lab --name aks-migration-lab --overwrite-existing
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v4
+
+      - name: Deploy Pong with Helm
+        run: helm upgrade --install pong-app ./helm/pong-app --namespace prod --set image.repository=acrmigrationlab.azurecr.io/pong-app --set image.tag=run-${{ github.run_number }}
+
+      - name: Verify rollout
+        run: kubectl rollout status deployment/pong-app --namespace prod --timeout=120s

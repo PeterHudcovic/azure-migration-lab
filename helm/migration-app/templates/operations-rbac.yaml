@@ -1,0 +1,61 @@
+{{- if .Values.operations.enabled }}
+# Namespace-scoped operational access for the console ServiceAccount.
+# No wildcard verbs are used.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "migration-app.fullname" . }}-operations
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch", "delete"]
+  - apiGroups: [""]
+    resources: ["services", "events"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list", "watch", "patch"]
+  - apiGroups: ["apps"]
+    resources: ["deployments/scale"]
+    verbs: ["get", "patch", "update"]
+  - apiGroups: ["networking.k8s.io"]
+    resources: ["ingresses"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "migration-app.fullname" . }}-operations
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ include "migration-app.fullname" . }}-operations
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "migration-app.serviceAccountName" . }}
+    namespace: {{ .Release.Namespace }}
+---
+# Nodes are cluster-scoped, so this narrow read-only ClusterRole is required
+# only for get/list/watch of nodes. It grants no write access.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "migration-app.fullname" . }}-node-reader
+rules:
+  - apiGroups: [""]
+    resources: ["nodes"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "migration-app.fullname" . }}-node-reader
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ include "migration-app.fullname" . }}-node-reader
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "migration-app.serviceAccountName" . }}
+    namespace: {{ .Release.Namespace }}
+{{- end }}

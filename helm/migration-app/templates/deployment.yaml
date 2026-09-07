@@ -1,109 +1,99 @@
 apiVersion: apps/v1
-
 kind: Deployment
-
 metadata:
   name: {{ include "migration-app.fullname" . }}
   labels:
     {{- include "migration-app.labels" . | nindent 4 }}
-
 spec:
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
   {{- end }}
-
   selector:
     matchLabels:
       {{- include "migration-app.selectorLabels" . | nindent 6 }}
-
   template:
     metadata:
       {{- with .Values.podAnnotations }}
       annotations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-
       labels:
         {{- include "migration-app.labels" . | nindent 8 }}
         {{- with .Values.podLabels }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
-
     spec:
-      {{- with .Values.imagePullSecrets }}
-      imagePullSecrets:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-
       serviceAccountName: {{ include "migration-app.serviceAccountName" . }}
-
-      {{- with .Values.podSecurityContext }}
-      securityContext:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-
       containers:
         - name: {{ .Chart.Name }}
-
-          {{- with .Values.securityContext }}
-          securityContext:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
-
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-
           env:
             - name: DB_HOST
               value: "migration-postgresql"
-
             - name: DB_PORT
               value: "5432"
-
             - name: DB_NAME
               value: {{ .Values.postgresql.database | quote }}
-
             - name: DB_USER
               value: {{ .Values.postgresql.username | quote }}
-
             - name: DB_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.databaseSecretName }}
                   key: POSTGRES_PASSWORD
-
+            {{- if .Values.operations.enabled }}
+            - name: ENV_NAME
+              value: {{ .Values.environment | quote }}
+            - name: BANNER
+              value: "Kubernetes Operations Console"
+            - name: SESSION_MINUTES
+              value: {{ .Values.operations.sessionMinutes | quote }}
+            - name: TARGET_NAMESPACE
+              value: {{ .Release.Namespace | quote }}
+            - name: TARGET_DEPLOYMENT
+              value: {{ .Values.operations.targetDeployment | quote }}
+            - name: MAX_REPLICAS
+              value: {{ .Values.operations.maxReplicas | quote }}
+            - name: DEMO_MINUTES
+              value: {{ .Values.operations.demoMinutes | quote }}
+            - name: DEMO_INTERVAL_SECONDS
+              value: {{ .Values.operations.demoIntervalSeconds | quote }}
+            - name: APP_VERSION
+              value: {{ .Values.image.tag | quote }}
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: LOGIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: migration-ops-secret
+                  key: LOGIN_PASSWORD
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: migration-ops-secret
+                  key: JWT_SECRET
+            {{- end }}
           ports:
             - name: http
               containerPort: {{ .Values.containerPort }}
               protocol: TCP
-
           {{- with .Values.livenessProbe }}
           livenessProbe:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-
           {{- with .Values.readinessProbe }}
           readinessProbe:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-
-          {{- with .Values.resources }}
-          resources:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
-
           {{- if .Values.keyVault.enabled }}
           volumeMounts:
             - name: secrets-store
               mountPath: "/mnt/secrets-store"
               readOnly: true
-          {{- else }}
-          {{- with .Values.volumeMounts }}
-          volumeMounts:
-            {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- end }}
-
       {{- if .Values.keyVault.enabled }}
       volumes:
         - name: secrets-store
@@ -112,24 +102,4 @@ spec:
             readOnly: true
             volumeAttributes:
               secretProviderClass: {{ include "migration-app.fullname" . }}-keyvault
-      {{- else }}
-      {{- with .Values.volumes }}
-      volumes:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- end }}
-
-      {{- with .Values.nodeSelector }}
-      nodeSelector:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-
-      {{- with .Values.affinity }}
-      affinity:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-
-      {{- with .Values.tolerations }}
-      tolerations:
-        {{- toYaml . | nindent 8 }}
       {{- end }}

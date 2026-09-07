@@ -4,6 +4,11 @@ on:
   push:
     branches:
       - main
+    paths:
+      - "app/**"
+      - "helm/migration-app/**"
+      - ".github/workflows/deploy.yml"
+  workflow_dispatch:
 
 jobs:
   build-and-deploy:
@@ -44,7 +49,8 @@ jobs:
 
       - name: Deploy with Helm
         run: |
-          helm upgrade --install migration-app ./helm/migration-app \
+          helm upgrade --install migration-app-prod ./helm/migration-app \
+            --namespace prod \
+            -f ./helm/migration-app/values-prod.yaml \
             --set image.repository=acrmigrationlab.azurecr.io/migration-app \
-            --set image.tag=${{ github.sha }} \
-            --set-string postgresql.password="${{ secrets.POSTGRES_PASSWORD }}"
+            --set image.tag=${{ github.sha }}

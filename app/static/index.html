@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AKS Operations Lab</title>
+<style>
+:root{--lg:#D8D2DF;--lg2:#ECE8F0;--bg:#F3F2F4;--border:#B8B0C0;--ink:#1E1E22;--muted:#68636E;--accent:#665675;--term:#151518;--termtext:#EAE6EC;--ok:#3E6B51;--bad:#9A3F4A;--warn:#8A6C2E}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:Consolas,"Cascadia Mono","Courier New",monospace;font-size:13px}button,input{font:inherit}.hidden{display:none!important}.wrap{width:min(1500px,96vw);margin:22px auto}.bar{background:var(--lg);border:1px solid var(--border);padding:16px 19px}.brand{font-size:20px;font-weight:700;color:var(--accent)}.sub{margin-top:6px;color:var(--muted);font-size:12px}.panel{background:#fff;border:1px solid var(--border)}.panel h3{margin:0;padding:10px 12px;background:var(--lg);color:var(--accent);font-size:13px}.pad{padding:13px}.btn{border:1px solid #9d94a5;background:#f8f7f9;padding:8px 11px;cursor:pointer;color:var(--ink)}.btn:hover{background:var(--lg2)}.btn.primary{background:var(--lg);font-weight:700}.btn.danger{border-color:#b88e95;color:#7f3039}.btn:disabled{opacity:.45;cursor:not-allowed}.login-grid{width:min(980px,96vw);margin:70px auto 0;display:grid;grid-template-columns:1fr 1fr;gap:16px}.field{display:block;margin:11px 0 5px;color:var(--muted)}input{width:100%;padding:9px;border:1px solid #bbb4c1;background:#fafafa}.rolebox{padding:13px;border:1px solid #d4cfd8;background:#faf9fb;line-height:1.65;margin-bottom:11px}.cred{display:inline-block;margin-top:9px;padding:8px 10px;background:#ece9ee;border:1px solid #c9c3ce}.small{font-size:12px;color:var(--muted);line-height:1.55}.msg{margin-top:10px;min-height:18px}.ok{color:var(--ok)}.bad{color:var(--bad)}.cards{display:grid;grid-template-columns:repeat(6,1fr);gap:9px;margin:11px 0}.card{background:#fff;border:1px solid var(--border);padding:11px}.card small{color:var(--muted)}.card b{display:block;margin-top:5px}.layout{display:grid;grid-template-columns:215px minmax(520px,1fr) 340px;gap:11px}.cmds .btn{display:block;width:100%;text-align:left;margin:6px 0}.terminal{background:var(--term);color:var(--termtext);min-height:460px;max-height:580px;overflow:auto;padding:14px;white-space:pre;font-size:12px;line-height:1.5}.prompt{color:#cbb8da}.terminal-input{display:flex;background:var(--term);border-top:1px solid #3b3740;padding:9px}.terminal-input span{color:#cbb8da;padding:8px 4px 0 0}.terminal-input input{border:0;outline:0;background:transparent;color:#fff;padding:7px;flex:1}.box{border:1px solid #d1cbd6;padding:10px;margin-bottom:9px}.big{font-size:26px;font-weight:700}.row{display:flex;gap:7px;flex-wrap:wrap}.pills{display:flex;gap:7px;flex-wrap:wrap}.pill{padding:4px 7px;border:1px solid #c9c2cf;background:#f6f5f7}.history{max-height:230px;overflow:auto;font-size:11px}.hist{padding:6px 0;border-bottom:1px dotted #ccc}.eventlog{max-height:190px;overflow:auto;font-size:11px;line-height:1.5}.rolling body,.rolling{background:#d8d8da!important}.successFlash{animation:flash 1.3s ease}@keyframes flash{0%{background:#d8eadf}100%{background:var(--bg)}}.explain{margin-top:11px;line-height:1.55}.status-live{color:var(--ok)}.status-roll{color:var(--warn)}@media(max-width:1050px){.layout{grid-template-columns:1fr}.cards{grid-template-columns:repeat(3,1fr)}.login-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<section id="loginView">
+  <div class="login-grid">
+    <div class="panel">
+      <h3>SIGN IN</h3><div class="pad">
+        <label class="field">Username or email</label><input id="identity" autocomplete="username">
+        <label class="field">Password</label><input id="password" type="password" autocomplete="current-password">
+        <div style="margin-top:13px"><button class="btn primary" onclick="login()">SIGN IN</button></div>
+        <div id="loginMsg" class="msg bad"></div>
+        <hr style="border:0;border-top:1px dashed #bbb3c1;margin:17px 0">
+        <b>New user?</b><div class="small" style="margin:7px 0">Register with username, email and password. Registered users can use all read-only cluster checks, scale Pong from 1 to 5 replicas, start a rolling restart and run the 15-minute Demo Mode.</div>
+        <button class="btn" onclick="toggleRegister()">REGISTER</button>
+        <div id="registerBox" class="hidden" style="margin-top:10px">
+          <label class="field">Username</label><input id="regUser">
+          <label class="field">Email</label><input id="regEmail" type="email">
+          <label class="field">Password (minimum 8 characters)</label><input id="regPass" type="password">
+          <button class="btn primary" style="margin-top:11px" onclick="registerUser()">CREATE ACCOUNT</button>
+          <div id="regMsg" class="msg"></div>
+        </div>
+      </div>
+    </div>
+    <div class="panel">
+      <h3>GUEST ACCESS</h3><div class="pad">
+        <div class="rolebox"><b>Guest is read-only.</b><br>View Pods, Nodes, Deployments, Services, Ingress and Events. Run health checks, <code>-o wide</code>, <code>describe pod</code>, cluster info and other approved read-only commands.<div class="cred">username: <b>guest</b><br>password: <b>guest</b></div></div>
+        <button class="btn primary" onclick="guestLogin()">LOGIN AS GUEST</button>
+        <div class="small" style="margin-top:14px"><b>Registered user:</b> read-only terminal + scale + rolling restart + Demo Mode.<br><br><b>Admin:</b> registered-user permissions + delete target Pong Pod.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="appView" class="hidden">
+<div class="wrap">
+  <div class="bar"><div class="brand">peter@aks:~$ kubernetes-operations-console</div><div class="sub">cluster=aks-migration-lab &nbsp; environment=prod &nbsp; <span id="userLine"></span> &nbsp; session=<span id="session">10:00</span> <button class="btn" style="float:right;padding:4px 8px" onclick="logout()">LOGOUT</button></div></div>
+  <div class="cards">
+    <div class="card"><small>NODES</small><b id="cNodes">...</b></div><div class="card"><small>PODS</small><b id="cPods">...</b></div><div class="card"><small>PONG</small><b id="cPong">...</b></div><div class="card"><small>POSTGRESQL</small><b id="cDb">...</b></div><div class="card"><small>INGRESS</small><b id="cIngress">...</b></div><div class="card"><small>ROLLOUT</small><b id="cRollout">...</b></div>
+  </div>
+  <div class="layout">
+    <div class="panel"><h3>KUBERNETES COMMANDS</h3><div class="pad cmds">
+      <button class="btn" onclick="quick('pods')">PODS</button><button class="btn" onclick="quick('pods-wide')">PODS -o wide</button><button class="btn" onclick="quick('nodes')">NODES</button><button class="btn" onclick="quick('nodes-wide')">NODES -o wide</button><button class="btn" onclick="quick('deployments')">DEPLOYMENTS</button><button class="btn" onclick="quick('services')">SERVICES</button><button class="btn" onclick="quick('ingress')">INGRESS</button><button class="btn" onclick="quick('events')">EVENTS</button><button class="btn primary" onclick="health()">HEALTH CHECK</button>
+      <div class="small" style="margin-top:12px"><b>Typed terminal:</b><br>Try <code>kubectl get pods -o wide</code>, <code>kubectl describe pod NAME</code>, <code>kubectl cluster-info</code> or <code>kubectl api-resources</code>. No real shell is exposed.</div>
+    </div></div>
+
+    <div class="panel"><h3>LIVE READ-ONLY TERMINAL</h3><div id="terminal" class="terminal"><span class="prompt">$ kubectl get pods -n prod -o wide</span>\nReady. Use a button or type an approved read-only kubectl command below.</div><div class="terminal-input"><span>$</span><input id="cmd" placeholder="kubectl get pods -n prod -o wide" onkeydown="if(event.key==='Enter') runTyped()"><button class="btn" onclick="runTyped()">RUN</button></div></div>
+
+    <div>
+      <div class="panel"><h3>PONG ROLLING REDEPLOYMENT</h3><div class="pad">
+        <div class="box"><small>DEMO MODE</small><div class="big" id="demoState">OFF</div><div class="small">15-minute window. While active, Kubernetes performs a rolling redeployment every 3 minutes using the same image. No continuous GitHub build is required.</div><div style="margin-top:9px">Next redeploy: <b id="nextDeploy">--:--</b><br>Time remaining: <b id="demoRemaining">--:--</b></div></div>
+        <div class="row"><button id="startDemo" class="btn primary" onclick="demoStart()">START 15 MIN</button><button id="stopDemo" class="btn" onclick="demoStop()">STOP</button></div>
+        <div class="box" style="margin-top:9px">Status: <b id="rollStatus">...</b><br>Image: <span id="image">...</span><br>Replicas: <b id="replicas">...</b><br>Zero downtime: <b>ENABLED</b><br>maxUnavailable: 0<br>maxSurge: 1</div>
+        <button class="btn primary" style="width:100%;font-size:14px" onclick="openPong()">▶ OPEN PONG WINDOW</button>
+        <div id="writeControls" class="hidden"><hr style="border:0;border-top:1px dashed #bbb3c1"><b>Deployment controls</b><div class="row" style="margin-top:8px"><button class="btn" onclick="scaleBy(-1)">− REPLICA</button><button class="btn" onclick="scaleBy(1)">+ REPLICA</button><button class="btn" onclick="restart()">ROLLING RESTART</button></div></div>
+      </div></div>
+      <div class="panel" style="margin-top:11px"><h3>LIVE POD LIFECYCLE</h3><div class="pad eventlog" id="eventLog">Waiting for Kubernetes events...</div></div>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-top:11px">
+    <div class="panel"><h3>AUDIT / DEPLOYMENT HISTORY</h3><div class="pad history" id="history">...</div></div>
+    <div class="panel"><h3>HOW THE PONG DEMO WORKS</h3><div class="pad explain">Internet → Azure Load Balancer → NGINX Ingress Controller → <b>/pong</b> → pong-app Service → Pong Pods.<br><br>During Demo Mode Kubernetes changes the Deployment Pod-template annotation every 3 minutes. That creates a real rolling redeployment. A new Pod is started and must pass its readiness probe before the old Pod is terminated. With <b>maxUnavailable: 0</b> and <b>maxSurge: 1</b>, the application remains available while Pods are replaced.<br><br>The terminal never executes arbitrary shell commands. It accepts only an explicit read-only Kubernetes command whitelist. Write operations are separate API actions and require the appropriate application role.</div></div>
+  </div>
+</div>
+</section>
+<script>
+let token='',role='',username='',expiresAt=0,state=null,lastRolling=false;
+const $=id=>document.getElementById(id);
+function auth(){return {'Authorization':'Bearer '+token,'Content-Type':'application/json'}}
+async function api(url,opt={}){opt.headers={...(opt.headers||{}),...auth()};const r=await fetch(url,opt);if(r.status===401){logout();throw new Error('Session expired.')}let d={};try{d=await r.json()}catch{}if(!r.ok)throw new Error(d.detail||('HTTP '+r.status));return d}
+function toggleRegister(){$('registerBox').classList.toggle('hidden')}
+async function registerUser(){try{const d=await fetch('/api/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:$('regUser').value,email:$('regEmail').value,password:$('regPass').value})});const j=await d.json();if(!d.ok)throw new Error(j.detail||'Registration failed');$('regMsg').className='msg ok';$('regMsg').textContent=j.message}catch(e){$('regMsg').className='msg bad';$('regMsg').textContent=e.message}}
+async function doLogin(identity,password){try{const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({identity,password})});const d=await r.json();if(!r.ok)throw new Error(d.detail||'Login failed');token=d.token;role=d.role;username=d.username;expiresAt=d.expires_at*1000;$('loginView').classList.add('hidden');$('appView').classList.remove('hidden');$('userLine').textContent='user='+username+' role='+role;$('writeControls').classList.toggle('hidden',!(role==='user'||role==='admin'));$('startDemo').disabled=role==='guest';$('stopDemo').disabled=role==='guest';connectEvents();await refreshAll();setInterval(refreshAll,5000);setInterval(timers,500)}catch(e){$('loginMsg').textContent=e.message}}
+function login(){doLogin($('identity').value,$('password').value)}function guestLogin(){doLogin('guest','guest')}
+function logout(){token='';location.reload()}
+function timers(){if(!expiresAt)return;const s=Math.max(0,Math.floor((expiresAt-Date.now())/1000));$('session').textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');if(s<=0)logout();if(window.demo){const now=Date.now();if(demo.active){$('demoRemaining').textContent=fmt(Math.max(0,Math.floor((Date.parse(demo.active_until)-now)/1000)));$('nextDeploy').textContent=fmt(Math.max(0,Math.floor((Date.parse(demo.next_run)-now)/1000)))}else{$('demoRemaining').textContent='--:--';$('nextDeploy').textContent='--:--'}}}
+function fmt(s){return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
+function terminal(text){$('terminal').textContent=text;$('terminal').scrollTop=$('terminal').scrollHeight}
+async function quick(c){try{terminal((await api('/api/terminal/'+c)).output)}catch(e){terminal('$ '+c+'\nPERMISSION / COMMAND ERROR: '+e.message)}}
+async function runTyped(){const c=$('cmd').value.trim();if(!c)return;try{terminal((await api('/api/terminal',{method:'POST',body:JSON.stringify({command:c})})).output);$('cmd').value=''}catch(e){terminal('$ '+c+'\nBLOCKED: '+e.message)}}
+async function health(){try{const d=await api('/api/check');terminal('$ health-check\n\nKubernetes API ........ '+d.kubernetes_api+'\nNodes Ready ........... '+d.nodes+'\nPods Running .......... '+d.pods+'\nPong Deployment ....... '+d.pong+'\nRollout ............... '+d.rollout+'\nPostgreSQL ............ '+d.postgresql+'\nIngress ............... '+d.ingress)}catch(e){terminal('health-check failed: '+e.message)}}
+async function refreshAll(){if(!token)return;try{state=await api('/api/state');const h=await api('/api/check');window.demo=await api('/api/demo');$('cNodes').textContent=h.nodes;$('cPods').textContent=h.pods;$('cPong').textContent=h.pong;$('cDb').textContent=h.postgresql.toUpperCase();$('cIngress').textContent=h.ingress.toUpperCase();$('cRollout').textContent=h.rollout;$('image').textContent=state.image||'-';$('replicas').textContent=(state.ready||0)+' / '+(state.desired||0);$('rollStatus').textContent=state.rolling?'ROLLING UPDATE':'STABLE';$('rollStatus').className=state.rolling?'status-roll':'status-live';$('demoState').textContent=demo.active?'ACTIVE':'OFF';document.body.classList.toggle('rolling',!!state.rolling);if(lastRolling&&!state.rolling)document.body.classList.add('successFlash');setTimeout(()=>document.body.classList.remove('successFlash'),1400);lastRolling=!!state.rolling;await loadHistory()}catch(e){console.error(e)}}
+async function loadHistory(){try{const h=await api('/api/history');$('history').innerHTML=h.map(x=>'<div class="hist"><b>'+esc(x.actor)+'</b> · '+esc(x.action)+' · '+esc(x.target||'')+'<br><span class="small">'+new Date(x.at).toLocaleString()+' '+esc(x.detail||'')+'</span></div>').join('')||'No history yet.'}catch{}}
+function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+async function scaleBy(delta){if(!state)return;const n=Math.max(1,Math.min(state.max_replicas,state.desired+delta));try{await api('/api/scale',{method:'POST',body:JSON.stringify({replicas:n})});await refreshAll()}catch(e){alert(e.message)}}
+async function restart(){try{await api('/api/restart',{method:'POST'});await refreshAll()}catch(e){alert(e.message)}}
+async function demoStart(){try{window.demo=await api('/api/demo/start',{method:'POST'});await refreshAll()}catch(e){alert(e.message)}}async function demoStop(){try{window.demo=await api('/api/demo/stop',{method:'POST'});await refreshAll()}catch(e){alert(e.message)}}
+function openPong(){window.open('/pong','pongWindow','width=900,height=700,resizable=yes,scrollbars=yes,menubar=no,toolbar=no,location=yes')}
+function connectEvents(){const es=new EventSource('/api/events');es.onmessage=e=>{try{const x=JSON.parse(e.data);const div=document.createElement('div');div.textContent=(x.at||'')+'  '+(x.pod?x.pod+' → '+x.phase:(x.message||x.kind));$('eventLog').prepend(div);while($('eventLog').children.length>30)$('eventLog').lastChild.remove()}catch{}}}
+</script>
+</body>
+</html>

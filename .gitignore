@@ -23,3 +23,11 @@ override.tf.json
 *_override.tf
 *_override.tf.json
 
+# Python bytecode
+__pycache__/
+*.pyc
+*.pyo
+
+# Archives
+*.zip
+

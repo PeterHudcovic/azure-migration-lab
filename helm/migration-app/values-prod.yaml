@@ -1,11 +1,12 @@
 replicaCount: 2
-
 environment: prod
 
 image:
   repository: acrmigrationlab.azurecr.io/migration-app
-  tag: "3"
+  tag: "ops-v4"
   pullPolicy: IfNotPresent
+
+containerPort: 8000
 
 serviceAccount:
   create: false
@@ -18,11 +19,38 @@ podLabels:
 
 databaseSecretName: migration-app-keyvault-secret
 
+postgresql:
+  enabled: true
+  image: postgres:16
+  database: migrationdb
+  username: migrationuser
+  password: ""
+  storage: 5Gi
+
 keyVault:
   enabled: true
   name: kv-migration-lab
   clientId: "6d4b4966-807d-408d-a800-93a9aa4d9281"
   tenantId: "3bdeb384-5dba-4624-a330-01211232fa30"
+
+operations:
+  enabled: true
+  sessionMinutes: 10
+  targetDeployment: pong-app
+  maxReplicas: 5
+  demoMinutes: 15
+  demoIntervalSeconds: 180
+
+livenessProbe:
+  httpGet:
+    path: /healthz
+    port: http
+
+readinessProbe:
+  httpGet:
+    path: /readyz
+    port: http
+  initialDelaySeconds: 5
 
 ingress:
   enabled: true
@@ -34,3 +62,6 @@ ingress:
         - path: /
           pathType: Prefix
   tls: []
+
+autoscaling:
+  enabled: false
