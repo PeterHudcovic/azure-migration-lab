@@ -7,7 +7,9 @@ pipeline {
         IMAGE_NAME = 'migration-app'
         RESOURCE_GROUP = 'rg-migration-lab'
         AKS_CLUSTER = 'aks-migration-lab'
-        KEY_VAULT_NAME = 'kv-migration-lab'
+        RELEASE_NAME = 'migration-app-prod'
+        NAMESPACE = 'prod'
+        VALUES_FILE = 'helm/migration-app/values-prod.yaml'
 
         AZURE_CLIENT_ID = credentials('azure-client-id')
         AZURE_CLIENT_SECRET = credentials('azure-client-secret')
@@ -49,26 +51,16 @@ pipeline {
         stage('Deploy to AKS') {
             steps {
                 sh '''
-                    set +x
-
                     az aks get-credentials \
                       --resource-group $RESOURCE_GROUP \
                       --name $AKS_CLUSTER \
                       --overwrite-existing
 
-                    POSTGRES_PASSWORD=$(az keyvault secret show \
-                      --vault-name $KEY_VAULT_NAME \
-                      --name postgres-password \
-                      --query value \
-                      --output tsv)
-
-                    helm upgrade --install migration-app ./helm/migration-app \
+                    helm upgrade --install $RELEASE_NAME ./helm/migration-app \
+                      --namespace $NAMESPACE \
+                      -f $VALUES_FILE \
                       --set image.repository=$ACR_SERVER/$IMAGE_NAME \
-                      --set image.tag=$BUILD_NUMBER \
-                      --set-string postgresql.password="$POSTGRES_PASSWORD"
-
-                    unset POSTGRES_PASSWORD
-                    set -x
+                      --set image.tag=$BUILD_NUMBER
                 '''
             }
         }
@@ -76,8 +68,8 @@ pipeline {
         stage('Verify Deployment') {
             steps {
                 sh '''
-                    kubectl get pods
-                    kubectl rollout status deployment/migration-app
+                    kubectl get pods -n $NAMESPACE
+                    kubectl rollout status deployment/$RELEASE_NAME -n $NAMESPACE
                 '''
             }
         }

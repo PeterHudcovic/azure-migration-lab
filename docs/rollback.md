@@ -36,11 +36,11 @@ kubectl logs deployment/migration-app
 
 Check application health endpoint:
 
-/health
+/healthz
 
 Check database connectivity:
 
-/db
+/readyz (returns HTTP 503 while PostgreSQL is unreachable, 200 once connected)
 
 ## PostgreSQL rollback
 
@@ -49,5 +49,5 @@ If database migration validation fails:
 1. Stop writes to the target database.
 2. Switch the application connection back to the source PostgreSQL database.
 3. Restart the application workload if required.
-4. Verify the /health endpoint.
-5. Verify the /db endpoint.
+4. Verify the /healthz endpoint.
+5. Verify the /readyz endpoint.

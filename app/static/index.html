@@ -7,6 +7,25 @@
 <style>
 :root{--lg:#D8D2DF;--lg2:#ECE8F0;--bg:#F3F2F4;--border:#B8B0C0;--ink:#1E1E22;--muted:#68636E;--accent:#665675;--term:#151518;--termtext:#EAE6EC;--ok:#3E6B51;--bad:#9A3F4A;--warn:#8A6C2E}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:Consolas,"Cascadia Mono","Courier New",monospace;font-size:13px}button,input{font:inherit}.hidden{display:none!important}.wrap{width:min(1500px,96vw);margin:22px auto}.bar{background:var(--lg);border:1px solid var(--border);padding:16px 19px}.brand{font-size:20px;font-weight:700;color:var(--accent)}.sub{margin-top:6px;color:var(--muted);font-size:12px}.panel{background:#fff;border:1px solid var(--border)}.panel h3{margin:0;padding:10px 12px;background:var(--lg);color:var(--accent);font-size:13px}.pad{padding:13px}.btn{border:1px solid #9d94a5;background:#f8f7f9;padding:8px 11px;cursor:pointer;color:var(--ink)}.btn:hover{background:var(--lg2)}.btn.primary{background:var(--lg);font-weight:700}.btn.danger{border-color:#b88e95;color:#7f3039}.btn:disabled{opacity:.45;cursor:not-allowed}.login-grid{width:min(980px,96vw);margin:70px auto 0;display:grid;grid-template-columns:1fr 1fr;gap:16px}.field{display:block;margin:11px 0 5px;color:var(--muted)}input{width:100%;padding:9px;border:1px solid #bbb4c1;background:#fafafa}.rolebox{padding:13px;border:1px solid #d4cfd8;background:#faf9fb;line-height:1.65;margin-bottom:11px}.cred{display:inline-block;margin-top:9px;padding:8px 10px;background:#ece9ee;border:1px solid #c9c3ce}.small{font-size:12px;color:var(--muted);line-height:1.55}.msg{margin-top:10px;min-height:18px}.ok{color:var(--ok)}.bad{color:var(--bad)}.cards{display:grid;grid-template-columns:repeat(6,1fr);gap:9px;margin:11px 0}.card{background:#fff;border:1px solid var(--border);padding:11px}.card small{color:var(--muted)}.card b{display:block;margin-top:5px}.layout{display:grid;grid-template-columns:215px minmax(520px,1fr) 340px;gap:11px}.cmds .btn{display:block;width:100%;text-align:left;margin:6px 0}.terminal{background:var(--term);color:var(--termtext);min-height:460px;max-height:580px;overflow:auto;padding:14px;white-space:pre;font-size:12px;line-height:1.5}.prompt{color:#cbb8da}.terminal-input{display:flex;background:var(--term);border-top:1px solid #3b3740;padding:9px}.terminal-input span{color:#cbb8da;padding:8px 4px 0 0}.terminal-input input{border:0;outline:0;background:transparent;color:#fff;padding:7px;flex:1}.box{border:1px solid #d1cbd6;padding:10px;margin-bottom:9px}.big{font-size:26px;font-weight:700}.row{display:flex;gap:7px;flex-wrap:wrap}.pills{display:flex;gap:7px;flex-wrap:wrap}.pill{padding:4px 7px;border:1px solid #c9c2cf;background:#f6f5f7}.history{max-height:230px;overflow:auto;font-size:11px}.hist{padding:6px 0;border-bottom:1px dotted #ccc}.eventlog{max-height:190px;overflow:auto;font-size:11px;line-height:1.5}.rolling body,.rolling{background:#d8d8da!important}.successFlash{animation:flash 1.3s ease}@keyframes flash{0%{background:#d8eadf}100%{background:var(--bg)}}.explain{margin-top:11px;line-height:1.55}.status-live{color:var(--ok)}.status-roll{color:var(--warn)}@media(max-width:1050px){.layout{grid-template-columns:1fr}.cards{grid-template-columns:repeat(3,1fr)}.login-grid{grid-template-columns:1fr}}
+.tabs{display:flex;gap:7px;margin:11px 0}
+.tabs .btn{padding:8px 16px}
+.gsec{background:#fff;border:1px solid var(--border);margin-bottom:9px}
+.gsec>summary{list-style:none;cursor:pointer;padding:11px 14px;background:var(--lg);color:var(--accent);font-weight:700;font-size:13px;display:flex;justify-content:space-between;align-items:center}
+.gsec>summary::-webkit-details-marker{display:none}
+.gsec>summary:after{content:'+ expand';font-size:11px;font-weight:400;color:var(--accent)}
+.gsec[open]>summary:after{content:'\2212 collapse'}
+.gsec .gbody{padding:15px 17px;line-height:1.6}
+.gsec .gbody h4{margin:18px 0 6px;color:var(--accent);font-size:13px;border-bottom:1px dashed #cfc8d4;padding-bottom:4px}
+.gsec .gbody h4:first-child{margin-top:0}
+.gsec .gbody p{margin:6px 0 12px}
+.gsec .gbody ul{margin:6px 0 12px;padding-left:18px}
+.gsec .gintro{color:var(--muted);margin-bottom:2px}
+.flow{background:var(--term);color:var(--termtext);padding:14px 16px;white-space:pre;font-size:12px;line-height:1.6;margin:10px 0;overflow-x:auto}
+.qa{border:1px solid #d4cfd8;margin:7px 0;background:#faf9fb}
+.qa>summary{cursor:pointer;padding:9px 11px;font-weight:700;color:var(--ink);font-size:12.5px}
+.qa>summary::-webkit-details-marker{display:none}
+.qa .qa-a{padding:0 12px 11px;color:var(--muted);line-height:1.6;font-size:12.5px}
+.tag{display:inline-block;padding:2px 7px;font-size:10px;font-weight:400;border:1px solid #c9c2cf;background:#f6f5f7;color:var(--muted);margin-left:8px;vertical-align:middle}
 </style>
 </head>
 <body>
@@ -44,6 +63,8 @@
 <section id="appView" class="hidden">
 <div class="wrap">
   <div class="bar"><div class="brand">peter@aks:~$ kubernetes-operations-console</div><div class="sub">cluster=aks-migration-lab &nbsp; environment=prod &nbsp; <span id="userLine"></span> &nbsp; session=<span id="session">10:00</span> <button class="btn" style="float:right;padding:4px 8px" onclick="logout()">LOGOUT</button></div></div>
+  <div class="tabs"><button id="tabDash" class="btn primary" onclick="showTab('dashboard')">DASHBOARD</button><button id="tabGuide" class="btn" onclick="showTab('guide')">PROJECT GUIDE</button></div>
+  <div id="dashboardView">
   <div class="cards">
     <div class="card"><small>NODES</small><b id="cNodes">...</b></div><div class="card"><small>PODS</small><b id="cPods">...</b></div><div class="card"><small>PONG</small><b id="cPong">...</b></div><div class="card"><small>POSTGRESQL</small><b id="cDb">...</b></div><div class="card"><small>INGRESS</small><b id="cIngress">...</b></div><div class="card"><small>ROLLOUT</small><b id="cRollout">...</b></div>
   </div>
@@ -71,6 +92,218 @@
     <div class="panel"><h3>AUDIT / DEPLOYMENT HISTORY</h3><div class="pad history" id="history">...</div></div>
     <div class="panel"><h3>HOW THE PONG DEMO WORKS</h3><div class="pad explain">Internet → Azure Load Balancer → NGINX Ingress Controller → <b>/pong</b> → pong-app Service → Pong Pods.<br><br>During Demo Mode Kubernetes changes the Deployment Pod-template annotation every 3 minutes. That creates a real rolling redeployment. A new Pod is started and must pass its readiness probe before the old Pod is terminated. With <b>maxUnavailable: 0</b> and <b>maxSurge: 1</b>, the application remains available while Pods are replaced.<br><br>The terminal never executes arbitrary shell commands. It accepts only an explicit read-only Kubernetes command whitelist. Write operations are separate API actions and require the appropriate application role.</div></div>
   </div>
+  </div>
+
+  <div id="guideView" class="hidden">
+  <div class="panel" style="margin-bottom:11px"><div class="pad small">This tab documents how the project actually works, grounded in the files in this repository — <code>terraform/</code>, <code>helm/</code>, <code>.github/workflows/</code>, <code>app/</code>, <code>migration/</code>, <code>docs/</code>, <code>ansible/</code> and the <code>Jenkinsfile</code> — rather than a generic reference architecture. Click a section to expand it.</div></div>
+
+  <details class="gsec"><summary>ARCHITECTURE<span class="tag">end-to-end flow</span></summary><div class="gbody">
+  <p>This project is an Azure Kubernetes Service (AKS) migration and operations lab: a workload was containerized, moved onto AKS, and is now operated through this console instead of raw <code>kubectl</code>. The flow below is the real pipeline in this repository.</p>
+  <div class="flow">Developer
+  │  git push (main)
+  ▼
+GitHub  (repository: azure-migration-lab)
+  │  triggers on push to main, path-filtered to app/**, helm/migration-app/**, .github/workflows/deploy.yml
+  ▼
+GitHub Actions  (.github/workflows/deploy.yml)
+  │  az login  →  az acr login  →  docker build ./app  →  docker push
+  ▼
+ACR  (acrmigrationlab.azurecr.io)
+  │  helm upgrade --install migration-app-prod ./helm/migration-app -f values-prod.yaml
+  ▼
+Helm  (release: migration-app-prod, namespace: prod)
+  ▼
+AKS  (aks-migration-lab)
+  ├── Operations Console   (this app - FastAPI, Deployment migration-app-prod)
+  ├── Pong application     (Deployment pong-app, rolling-restart demo target)
+  └── PostgreSQL           (StatefulSet migration-postgresql)</div>
+  <p>Underneath all of this sits <b>Terraform</b> (<code>terraform/</code>), which provisions the Azure infrastructure the pipeline above depends on: the Resource Group, Virtual Network/Subnet, the AKS cluster, the Container Registry and the Key Vault. Terraform is applied manually against a remote state file — it is not triggered by a push to <code>main</code>. It is the layer that has to exist before the diagram above can run at all.</p>
+  <div class="flow">Terraform (terraform/*.tf)
+  ▼
+Azure Resource Group → Virtual Network / Subnet → AKS + ACR + Key Vault
+  ▼
+(the platform the CI/CD flow above deploys onto)</div>
+  <p><b>What can go wrong:</b> a red step in the GitHub Actions run means the build/push/deploy stage itself failed — read that job's log. A green pipeline run with a broken app means the problem moved into Kubernetes (see Troubleshooting). A Terraform-layer problem, such as a resource created outside Terraform, shows up as drift on the next <code>terraform plan</code>, not as a pipeline failure.</p>
+  </div></details>
+
+  <details class="gsec"><summary>AZURE<span class="tag">resource group → AKS → ACR → Key Vault</span></summary><div class="gbody">
+  <h4>Resource Group - rg-migration-lab</h4>
+  <p>A management/billing boundary — everything else in this project lives inside it (or, for AKS, inside its auto-managed node resource group). Defined once in <code>terraform/main.tf</code> as <code>azurerm_resource_group.main</code>, location <code>westeurope</code>. Deleting it deletes everything inside it — the single biggest blast-radius resource in the project.</p>
+  <h4>Virtual Network &amp; Subnet - vnet-migration-lab / snet-aks</h4>
+  <p>AKS nodes get private IPs from <code>snet-aks</code> (10.10.1.0/24) inside <code>vnet-migration-lab</code> (10.10.0.0/16), both in <code>main.tf</code>. This lets Pods, the internal load-balancer frontend and the API server talk to each other privately instead of over the public internet.</p>
+  <h4>AKS - aks-migration-lab</h4>
+  <p>Defined in <code>main.tf</code> as <code>azurerm_kubernetes_cluster.main</code>: Free SKU tier, one system node pool (<code>Standard_B2s_v2</code>), <b>SystemAssigned</b> managed identity. AKS also auto-creates a second, hidden resource group (<code>MC_rg-migration-lab_aks-migration-lab_swedencentral</code>) holding the actual VM scale set, disks, the Standard Load Balancer and the public IP the Ingress controller uses — none of that is declared in <code>main.tf</code>, AKS manages it internally.</p>
+  <h4>ACR - acrmigrationlab</h4>
+  <p>Basic SKU, <code>admin_enabled = false</code>. Both application images (<code>migration-app</code>, <code>pong-app</code>) live here. AKS pulls from it using the kubelet's managed identity, granted the <b>AcrPull</b> role via <code>azurerm_role_assignment.aks_acr_pull</code> — no registry password stored anywhere. If that role assignment were removed, every Pod would fail with <code>ImagePullBackOff</code>/401 even though the image exists.</p>
+  <h4>Key Vault - kv-migration-lab</h4>
+  <p>Holds the PostgreSQL password. Defined in <code>terraform/keyvault.tf</code> with <code>rbac_authorization_enabled = true</code> (Azure RBAC controls access, not vault access policies). Pods never call Key Vault directly — a CSI driver mounts the secret in (see Security).</p>
+  <h4>Load Balancer &amp; Public IP</h4>
+  <p>Not in Terraform at all — the NGINX Ingress Controller's <code>LoadBalancer</code> Service made Azure auto-provision a Standard SKU, Static public IP and Standard Load Balancer inside the AKS node resource group. Real, working, currently stable — but nothing yet protects it from reallocation if that Service were ever deleted and recreated (see Terraform section).</p>
+  </div></details>
+
+  <details class="gsec"><summary>TERRAFORM<span class="tag">providers · backend · main · keyvault</span></summary><div class="gbody">
+  <p>Four files. <code>providers.tf</code> pins the <code>azurerm</code> provider to <code>~&gt;4.0</code>. <code>backend.tf</code> configures a <b>remote state backend</b> — an Azure Storage Account (<code>stmigrationlabtfstate</code>, container <code>tfstate</code>, key <code>migration-lab.tfstate</code>) — instead of a local <code>terraform.tfstate</code>. <code>main.tf</code> declares the Resource Group, VNet, Subnet, ACR, AKS cluster and the AcrPull role assignment. <code>keyvault.tf</code> declares the Key Vault.</p>
+  <h4>Why remote state</h4>
+  <p>Local state is one JSON file describing what Terraform believes exists. Kept on one machine, two people (or one person from two machines) could run <code>apply</code> against stale state and corrupt or double-create resources. A Storage Account backend gives one shared source of truth and, via blob leases, locks concurrent <code>apply</code> runs out of each other.</p>
+  <h4>What's actually in state today</h4>
+  <p><code>terraform state list</code> against this backend shows exactly 8 objects: resource group, VNet, subnet, ACR, AKS cluster, Key Vault, the AcrPull role assignment, and the <code>azurerm_client_config</code> data source. <b>Nothing about ingress-nginx, cert-manager, the Ingress Public IP, or any Kubernetes/Helm object is in Terraform</b> — that layer was set up imperatively with <code>az</code>/<code>helm</code>/<code>kubectl</code>. A real, current gap: <code>terraform plan</code> never shows the true end-to-end platform state, only the base Azure layer.</p>
+  <h4>What can go wrong / how to diagnose</h4>
+  <p>The most common failure is drift: something Terraform manages changed or was deleted outside Terraform, and the next <code>plan</code> either wants to revert it or errors because reality no longer matches state. Always run <code>plan</code> before <code>apply</code> and read the diff — a resource that already exists but isn't tracked yet (like the Ingress Public IP) needs <code>terraform import</code>, never a fresh <code>apply</code>, or Terraform will try to create a duplicate and Azure will reject it on a name collision.</p>
+  </div></details>
+
+  <details class="gsec"><summary>DOCKER<span class="tag">app/Dockerfile · pong/Dockerfile</span></summary><div class="gbody">
+  <h4>app/Dockerfile - the Operations Console image</h4>
+  <p><code>FROM python:3.12-slim</code>, installs <code>requirements.txt</code>, then copies only <code>config.py db.py k8s_ops.py main.py</code> and <code>static/</code> — not the whole build context. Creates and switches to a non-root user (<code>useradd -u 10001</code>, <code>USER 10001</code>) before any application code runs, then starts <code>uvicorn main:app</code> on port 8000. <code>app/.dockerignore</code> excludes <code>__pycache__/</code> and <code>*.pyc</code> from the build context.</p>
+  <h4>pong/Dockerfile - the demo target image</h4>
+  <p>A much simpler, unrelated image: <code>FROM nginx:1.27-alpine</code>, copies a static <code>index.html</code> and an <code>nginx.conf</code> that adds a plain-text <code>/health</code> endpoint on port 8080. Deliberately "dumb" — its only job is to be something that can be rolling-restarted and scaled repeatedly with no real backend dependency.</p>
+  <h4>Why two separate images</h4>
+  <p>The console and the demo target are deployed, scaled and restarted independently (two Deployments, two Services, two Ingress paths). One shared image would couple two unrelated failure domains for no reason.</p>
+  <h4>What can go wrong</h4>
+  <p><code>ImagePullBackOff</code> usually means the tag CI pushed doesn't match the tag Helm was told to deploy, or the AcrPull role assignment is missing. A build failure shows directly in the GitHub Actions "Build Docker image" step log.</p>
+  </div></details>
+
+  <details class="gsec"><summary>KUBERNETES<span class="tag">17 objects actually in use</span></summary><div class="gbody">
+  <h4>Pod</h4><p>The smallest deployable unit. Every running piece of this project — console, Pong, PostgreSQL — is ultimately one or more Pods. Nothing here creates a Pod directly; a Deployment or StatefulSet does.</p>
+  <h4>Deployment</h4><p>Manages a set of identical, stateless Pods (<code>migration-app-prod</code>, <code>pong-app</code>): desired replica count, Pod template, rollout strategy. Scale and restart in this console both work by patching the Deployment, never a Pod directly.</p>
+  <h4>ReplicaSet</h4><p>The object a Deployment creates to hold one Pod template's replicas. Every rolling restart creates a <i>new</i> ReplicaSet and scales the old one to zero — that is what "rolling update" means at the API level.</p>
+  <h4>Service</h4><p>A stable virtual IP/DNS name in front of a changing set of Pods. <code>migration-app-prod</code>, <code>pong-app</code> and <code>migration-postgresql</code> are all <code>ClusterIP</code>. The app reaches Postgres by the Service's DNS name, never a Pod IP.</p>
+  <h4>Ingress</h4><p>Routes external HTTP traffic by host/path via the NGINX Ingress Controller. The console's Ingress serves <code>/</code>; Pong's serves <code>/pong(/|$)(.*)</code> with a rewrite annotation stripping the prefix before it reaches nginx.</p>
+  <h4>Namespace</h4><p>A logical partition inside one cluster. This project uses <code>prod</code> (real deployment) plus <code>dev</code> and <code>test</code> for lighter Helm releases, all on the same AKS cluster. RBAC Roles are namespace-scoped, so a Role bound in <code>prod</code> has zero effect elsewhere.</p>
+  <h4>ServiceAccount</h4><p>The identity a Pod uses against the Kubernetes API. Console Pods run as <code>migration-app-sa</code>, which the chart does <b>not</b> create in prod (<code>serviceAccount.create: false</code>) because it is pre-wired for Workload Identity. Every RBAC binding in this project targets this one ServiceAccount.</p>
+  <h4>Secret</h4><p>Two matter here: <code>migration-app-keyvault-secret</code> (populated from Key Vault via the CSI driver) and <code>migration-ops-secret</code> (<code>LOGIN_PASSWORD</code>/<code>JWT_SECRET</code>). Neither is created by a Helm template with a literal value — both must already exist in the cluster.</p>
+  <h4>StatefulSet</h4><p>Like a Deployment, but for workloads needing stable identity and storage — only <code>migration-postgresql</code>. Its Pod name is always <code>migration-postgresql-0</code>, with its own PersistentVolumeClaim that survives Pod restarts.</p>
+  <h4>PVC / PV</h4><p>The StatefulSet's <code>volumeClaimTemplates</code> requests a PVC (size from <code>postgresql.storage</code>, e.g. <code>5Gi</code> in prod, <code>ReadWriteOnce</code>). Azure's CSI storage driver provisions a matching PersistentVolume (an Azure Disk) automatically, so Postgres data survives a Pod reschedule onto a different node.</p>
+  <h4>readinessProbe</h4><p>Tells Kubernetes when a Pod may receive traffic. The console's probe hits <code>/readyz</code>, which returns 503 until <code>db.is_up()</code> is true — a Pod that can't reach PostgreSQL is pulled out of the Service's Endpoints instead of serving broken requests.</p>
+  <h4>livenessProbe</h4><p>Tells Kubernetes when to kill and restart a Pod. The console's <code>/healthz</code> is deliberately DB-independent, so a temporary Postgres blip marks the Pod not-ready instead of restarting it in a loop.</p>
+  <h4>Rolling update</h4><p>Pong's Deployment explicitly sets <code>maxUnavailable: 0, maxSurge: 1</code>: a new Pod must pass readiness before an old one terminates, so replica count never drops during a redeploy. Demo Mode and the ROLLING RESTART button both exercise exactly this.</p>
+  <h4>Scaling</h4><p>The +/− REPLICA buttons call <code>PATCH</code> on the Deployment's <code>/scale</code> subresource (<code>k8s_ops.scale()</code>), bounded by <code>MAX_REPLICAS</code> (5 in prod). The ReplicaSet controller then creates or deletes Pods to match.</p>
+  <h4>Rollout / restart</h4><p>A restart without a new image patches the Pod template's annotations (<code>kubectl.kubernetes.io/restartedAt</code>) so the template hash changes and a new ReplicaSet is created even with an identical image tag — <code>k8s_ops.restart()</code>, the same mechanism as <code>kubectl rollout restart</code>.</p>
+  <h4>Kubernetes API</h4><p>Every console action — read, scale, restart, kill, the terminal — goes through the official <code>kubernetes</code> Python client, authenticated as <code>migration-app-sa</code>. No <code>kubectl</code> binary and no shell exist inside the app container.</p>
+  </div></details>
+
+  <details class="gsec"><summary>HELM<span class="tag">chart · values · releases</span></summary><div class="gbody">
+  <h4>Chart / Chart.yaml</h4><p><code>helm/migration-app</code> and <code>helm/pong-app</code> are two independent charts. Each <code>Chart.yaml</code> declares <code>apiVersion: v2</code>, a chart <code>version</code> (currently <code>0.1.0</code> for both) and an <code>appVersion</code> — metadata only, it does not drive the deployed image tag.</p>
+  <h4>values.yaml vs values-dev / values-test / values-prod</h4><p><code>values.yaml</code> holds chart defaults, kept in sync with the current FastAPI app: <code>containerPort: 8000</code>, liveness path <code>/healthz</code>, readiness path <code>/readyz</code> — so a bare <code>helm install</code> with no environment file already produces a Pod that can become Ready. <code>values-dev.yaml</code>/<code>values-test.yaml</code> stay minimal on top of that (replica count, environment tag) because those are the only things they genuinely need to differ on. <code>values-prod.yaml</code> goes further and overrides Key Vault, ingress and the operations-console settings, because those are real per-environment differences. This is exactly why keeping the base <code>values.yaml</code> accurate matters: dev/test inherit everything they don't explicitly override from it, so a stale default would silently break them even while prod, which overrides everything, looked completely fine.</p>
+  <h4>templates/</h4><p>Deployment, Service, Ingress, ServiceAccount, HPA, the Postgres StatefulSet/Service/Secret, the SecretProviderClass, and the RBAC Role/ClusterRole. <code>_helpers.tpl</code> centralizes name/label generation for consistent <code>app.kubernetes.io/*</code> labels across every object.</p>
+  <h4>Release, helm upgrade --install, --set, revisions, rollback</h4><p>A release is one named, tracked deployment of a chart into a namespace. This project currently has <b>four</b>: <code>migration-app-prod</code> (the real one), <code>migration-app-dev</code>, <code>migration-app-test</code>, and a bare <code>migration-app</code> release in the <code>default</code> namespace left over from earlier iterations before namespaces were introduced. <code>helm upgrade --install</code> creates the release if missing or upgrades it if present — idempotent, which is why CI can call it on every push. <code>--set</code> overrides individual values on the command line (used for <code>image.repository</code>/<code>image.tag</code>, only known at CI runtime). Every upgrade creates a numbered <b>revision</b> (prod is at revision 12); <code>helm rollback &lt;release&gt; &lt;revision&gt;</code> reverts to a prior revision's rendered manifests, documented in <code>docs/rollback.md</code>.</p>
+  <h4>What can go wrong</h4><p>This project's own <code>helm history</code> shows a real failed revision (revision 8: a field-ownership conflict on <code>.spec.replicas</code>, caused by a raw <code>kubectl scale</code> changing replicas at the same moment Helm applied). The fix is always the same: re-run <code>helm upgrade</code> once the conflicting change has settled, or <code>helm rollback</code> to the last good revision.</p>
+  </div></details>
+
+  <details class="gsec"><summary>CI/CD<span class="tag">GitHub Actions · Jenkins</span></summary><div class="gbody">
+  <h4>GitHub Actions - deploy.yml</h4>
+  <div class="flow">git push (main, paths: app/**, helm/migration-app/**, deploy.yml)
+  ▼
+GitHub Actions runner
+  ▼
+azure/login  (service principal, secrets.AZURE_CREDENTIALS)
+  ▼
+docker build ./app  →  docker push   (tag = github.sha)
+  ▼
+az aks get-credentials  (rg-migration-lab / aks-migration-lab)
+  ▼
+helm upgrade --install migration-app-prod ./helm/migration-app
+   --namespace prod  -f values-prod.yaml
+   --set image.repository=...  --set image.tag=&lt;github.sha&gt;
+  ▼
+rolling deployment  (maxUnavailable:0 / maxSurge:1)</div>
+  <p>Every image tag is the exact Git commit SHA that triggered the build — no <code>latest</code> tag anywhere in this flow, so the running image always maps back to one exact commit.</p>
+  <h4>GitHub Actions - pong-deploy.yml</h4>
+  <p>A separate, deliberately <b>manual-only</b> workflow (<code>workflow_dispatch</code>, no schedule) that builds and deploys the Pong image, tagged by the GitHub run number. Demo Mode does <b>not</b> use this workflow — it triggers a rolling restart of the already-deployed Pong image directly through the Kubernetes API, so Demo Mode does not cost a Docker build every 3 minutes.</p>
+  <h4>Jenkinsfile</h4>
+  <p>An older, parallel pipeline that builds and deploys the same console image, targeting the exact same production release as GitHub Actions: <code>helm upgrade --install migration-app-prod ./helm/migration-app --namespace prod -f helm/migration-app/values-prod.yaml</code>. What legitimately still differs is the platform plumbing around that, not the target: Jenkins authenticates with stored service-principal credentials (<code>azure-client-id/secret/tenant-id</code>) via <code>az login</code> instead of the <code>azure/login</code> action, and tags the image with Jenkins' own <code>$BUILD_NUMBER</code> instead of <code>github.sha</code>. Neither pipeline injects the PostgreSQL password directly any more — with <code>keyVault.enabled: true</code> in <code>values-prod.yaml</code>, the chart never renders the plain-Secret template that would need one, so the CSI driver / Workload Identity chain supplies it in both cases.</p>
+  <h4>What can go wrong</h4>
+  <p>A red step in the Actions log names the exact failed stage (login, build, push, Helm). A green workflow with a broken app means the problem moved into Kubernetes — the job's job is done the moment <code>helm upgrade</code> exits 0, it does not wait for the rollout to actually finish.</p>
+  </div></details>
+
+  <details class="gsec"><summary>POSTGRESQL<span class="tag">StatefulSet · migration scripts</span></summary><div class="gbody">
+  <h4>Where it runs</h4><p><code>migration-postgresql</code> is a single-replica StatefulSet running <code>postgres:16</code>, data directory (<code>PGDATA</code>) on a PersistentVolumeClaim so data survives Pod restarts and rescheduling.</p>
+  <h4>Connection flow</h4>
+  <div class="flow">Operations Console (main.py)
+  ▼  asyncpg.create_pool(dsn)        [app/db.py]
+  ▼  dsn built from DB_HOST/PORT/USER/PASSWORD/NAME   [app/config.py]
+  ▼
+Service "migration-postgresql"  (ClusterIP, port 5432)
+  ▼
+StatefulSet Pod "migration-postgresql-0"</div>
+  <p>The app connects to the Service's cluster-internal DNS name, never a Pod IP — a Postgres Pod restart is transparent to the app once the Service's endpoint updates.</p>
+  <h4>Migration tooling</h4><p><code>migration/backup-postgres.sh</code> runs <code>pg_dump -Fc</code> (custom format) against a source database; <code>migration/restore-postgres.sh</code> runs <code>pg_restore --clean --if-exists</code> against the target. <code>migration/README.md</code> documents the cutover: dump → restore → validate → cut writes over → final dump/restore → switch the app's connection → validate again → keep the source around for rollback.</p>
+  <h4>How migration success was validated</h4><p><code>docs/rollback.md</code> checks <code>/healthz</code> (liveness) and <code>/readyz</code> (fails with 503 until <code>db.is_up()</code> is true, 200 once PostgreSQL is reachable) after cutover — the same two endpoints the Kubernetes probes themselves use, plus the dashboard's own POSTGRESQL status card for a human-readable view. Keeping a runbook's endpoint names in sync with whatever the application actually exposes is what makes it safe to follow literally during a real rollback, instead of chasing a route that no longer exists.</p>
+  <h4>What can go wrong</h4><p>See "PostgreSQL connection failure" in Troubleshooting — the console degrades gracefully rather than crashing, because every DB call in <code>db.py</code> checks <code>if not _pool</code> first.</p>
+  </div></details>
+
+  <details class="gsec"><summary>SECURITY<span class="tag">RBAC · Workload Identity · no-shell terminal</span></summary><div class="gbody">
+  <h4>How a Pod reaches Key Vault without a stored password</h4>
+  <div class="flow">Pod (migration-app-prod / migration-postgresql)
+  ▼  serviceAccountName: migration-app-sa
+ServiceAccount (migration-app-sa)
+  ▼  azure.workload.identity/use: "true" label + federated identity credential
+Workload Identity
+  ▼  AKS OIDC issuer proves the token came from this ServiceAccount
+OIDC
+  ▼  federated credential trust
+Managed Identity (Azure AD)
+  ▼  RBAC-granted read access
+Azure Key Vault (kv-migration-lab)
+  ▼  Secrets Store CSI driver + SecretProviderClass
+Secret (migration-app-keyvault-secret, key POSTGRES_PASSWORD)</div>
+  <p>No client secret, connection string or password is stored in the cluster or the repo to make this work — trust is established once between the AKS OIDC issuer and the Managed Identity, and after that a Pod authenticates purely by presenting its own ServiceAccount token.</p>
+  <h4>RBAC: Role vs ClusterRole</h4><p>A <b>Role</b> (<code>migration-app-operations</code>) grants permissions only inside the namespace it is created in (<code>prod</code>) — <code>get/list/watch/delete</code> on pods, <code>get/list/watch</code> on services/events, <code>get/list/watch/patch</code> on deployments, <code>get/patch/update</code> on <code>deployments/scale</code>, read on ingresses. A <b>ClusterRole</b> (<code>migration-app-node-reader</code>) grants permissions cluster-wide, needed because Nodes aren't namespaced — narrowed to <code>get/list/watch</code> on <code>nodes</code> only. Neither uses a wildcard verb or resource. Both bind to the single <code>migration-app-sa</code> ServiceAccount.</p>
+  <h4>Why the namespace scope matters</h4><p>Because the Role is bound only in <code>prod</code>, the console's ServiceAccount has zero permissions in <code>dev</code>, <code>test</code> or <code>kube-system</code> — the API server itself would reject a request there with 403, regardless of what the terminal's whitelist allows. It is also why the terminal only accepts the pinned <code>TARGET_NAMESPACE</code> for <code>-n</code>.</p>
+  <h4>Why the terminal never runs a shell</h4><p><code>k8s_ops.parse_readonly_command()</code> uses <code>shlex.split()</code> only to tokenize typed text for comparison against a fixed set of allowed token sequences — every match dispatches to a specific Python function calling the Kubernetes client library directly. There is no <code>subprocess</code>, no <code>os.system</code>, no <code>shell=True</code>, no <code>eval</code>/<code>exec</code> anywhere in the codebase. An unrecognized command is rejected with an error, never passed to anything that could execute it.</p>
+  <h4>guest / user / admin</h4><p>Enforced server-side with a FastAPI dependency (<code>require(*roles)</code>) reading the <code>role</code> claim from the signed JWT — never trusted from the request body. <code>guest</code> reaches only read-only endpoints; <code>DELETE /api/pods/{name}</code> requires <code>admin</code>; scale/restart/Demo Mode require <code>user</code> or <code>admin</code>. Registration always assigns the hardcoded role <code>"user"</code> — there is no path for a self-registered account to become <code>admin</code>.</p>
+  <h4>Why passwords aren't in the Git repository</h4><p><code>LOGIN_PASSWORD</code> and <code>JWT_SECRET</code> are read from a Kubernetes Secret (<code>migration-ops-secret</code>) that Helm references but never creates with a literal value. The PostgreSQL password never touches the repo or CI logs; it flows from Key Vault through the CSI driver straight into a Secret object. <code>.gitignore</code> also blocks <code>*.zip</code>, <code>__pycache__</code> and Terraform state/plan files from ever being committed by accident.</p>
+  </div></details>
+
+  <details class="gsec"><summary>TROUBLESHOOTING<span class="tag">practical diagnostic flow</span></summary><div class="gbody">
+  <div class="flow">kubectl get pods
+  ▼  Running? Pending? CrashLoopBackOff?
+kubectl describe pod &lt;name&gt;
+  ▼  Events section — usually names the actual cause
+kubectl logs &lt;name&gt;
+  ▼
+Deployment / ReplicaSet
+  ▼  desired vs ready vs available
+Service / Endpoints
+  ▼  does the Service see any Pod at all?
+Ingress
+  ▼  does it point at the right Service/port?
+Application
+  ▼  app logs, /healthz, /readyz
+PostgreSQL</div>
+  <p>The same order used in <code>docs/troubleshooting.md</code> — start at the Pod, work outward only once the Pod itself looks healthy.</p>
+  <h4>CrashLoopBackOff</h4><p><code>kubectl logs &lt;pod&gt; --previous</code> to see why the last attempt crashed. In this project the most likely cause is <code>k8s_ops.init()</code> failing on startup with no in-cluster or kubeconfig credentials reachable — confirmed directly by running the console container outside AKS. Inside AKS this should not happen since the ServiceAccount token is auto-mounted.</p>
+  <h4>ImagePullBackOff</h4><p><code>kubectl describe pod</code> Events show either "not found" (Helm was given a tag never pushed to ACR) or "unauthorized" (the AcrPull role assignment on the kubelet identity is missing).</p>
+  <h4>readinessProbe failure</h4><p>Pod is <code>Running</code> but <code>0/1 Ready</code> and gets no traffic. For the console this means <code>/readyz</code> is 503 — check whether <code>migration-postgresql</code> is reachable. For Pong it means nginx isn't answering on 8080 yet.</p>
+  <h4>livenessProbe failure</h4><p>Pod restarts repeatedly after briefly being Ready. Since the console's liveness check (<code>/healthz</code>) is deliberately DB-independent, a liveness failure here points at something more serious than a database blip.</p>
+  <h4>Service without Endpoints</h4><p><code>kubectl get endpoints &lt;service&gt;</code> empty means the Service's selector matches no <i>Ready</i> Pod — check the Pod's labels against the selector, and that the Pod is passing readinessProbe (a not-Ready Pod is excluded from Endpoints even if it matches).</p>
+  <h4>Ingress not working / 502</h4><p>A 502 almost always means the Ingress points at a Service with no healthy Endpoints — check the backend Service first. For <code>pong-app</code>, a wrong rewrite/regex sends nginx a path it doesn't recognize, which shows as a 404 from Pong's own nginx rather than a 502.</p>
+  <h4>Key Vault secret not loading</h4><p><code>migration-app-keyvault-secret</code> never appears, or the Pod is stuck <code>ContainerCreating</code> on the CSI volume. Check the SecretProviderClass's <code>clientId</code>/<code>tenantId</code>/<code>keyvaultName</code>, and that the federated identity credential trusts this exact ServiceAccount + namespace pair — a namespace typo here is a classic silent failure.</p>
+  <h4>PostgreSQL connection failure</h4><p>The console does not crash — <code>db.connect()</code> catches the exception, logs a connection-failed message, and every DB call short-circuits on <code>if not _pool</code>. Visible symptom: a degraded but running console (no history, no registered-user login, Demo Mode/registration return 503). Check <code>kubectl logs migration-postgresql-0</code> and the Secret the app reads its password from.</p>
+  <h4>Helm deployment failure</h4><p><code>helm history &lt;release&gt; -n &lt;namespace&gt;</code> shows past attempts. This project's own revision 8 failed with a field-ownership conflict on <code>.spec.replicas</code> because a raw <code>kubectl scale</code> changed it outside Helm at the same moment. Re-running <code>helm upgrade</code> once things settle resolves it.</p>
+  <h4>Terraform apply failure</h4><p>Most likely here: managing a resource that already exists but isn't in state yet (e.g. the Ingress Public IP) — Terraform tries to create a duplicate and Azure rejects it on a name collision. Fix with <code>terraform import</code>, then <code>plan</code> to confirm no unwanted changes, never a forced <code>apply</code>.</p>
+  <h4>RBAC permission denied</h4><p>A 403 from the Kubernetes API means the request went outside what <code>migration-app-operations</code> or <code>migration-app-node-reader</code> actually grant — most commonly touching a namespace other than <code>prod</code>, or a resource type not listed in either rule set.</p>
+  </div></details>
+
+  <details class="gsec"><summary>KNOWLEDGE CHECK<span class="tag">16 questions</span></summary><div class="gbody">
+  <details class="qa"><summary>What happens after a git push?</summary><div class="qa-a">If the push touches <code>app/**</code>, <code>helm/migration-app/**</code> or the workflow file itself and lands on <code>main</code>, <code>deploy.yml</code> runs: authenticate to Azure, build the console image tagged with the commit SHA, push to ACR, fetch AKS credentials, then <code>helm upgrade --install migration-app-prod</code> with <code>-f values-prod.yaml</code> and <code>--namespace prod</code>. A push outside those paths does not trigger it at all.</div></details>
+  <details class="qa"><summary>Why is Helm used?</summary><div class="qa-a">The same chart needs to produce three different environments (dev/test/prod) with different ports, probes, replica counts and feature flags — Helm's values-file layering does that without duplicating the Kubernetes YAML three times, and it gives every deploy a tracked, numbered revision that can be rolled back.</div></details>
+  <details class="qa"><summary>How does Helm rollback work?</summary><div class="qa-a"><code>helm rollback &lt;release&gt; &lt;revision&gt;</code> re-applies the exact rendered manifests from that earlier revision. It does not rebuild anything — a purely Kubernetes-object-level revert, so the image referenced by that old revision must still exist in ACR for the rollback to work.</div></details>
+  <details class="qa"><summary>Deployment vs StatefulSet?</summary><div class="qa-a">A Deployment (<code>migration-app-prod</code>, <code>pong-app</code>) manages interchangeable, stateless Pods with random name suffixes. A StatefulSet (<code>migration-postgresql</code>) gives each Pod a stable, predictable name and its own dedicated PVC that follows that specific Pod — required because a database can't be "any interchangeable replica."</div></details>
+  <details class="qa"><summary>Role vs ClusterRole?</summary><div class="qa-a">A Role's permissions apply only inside the namespace it's created in; a ClusterRole's apply cluster-wide, needed for cluster-scoped resources like Nodes. This project uses a namespace-scoped Role for pods/services/deployments/ingresses in <code>prod</code>, and a ClusterRole only for the one thing that must be cluster-wide: reading Nodes.</div></details>
+  <details class="qa"><summary>How does a Pod access Azure Key Vault?</summary><div class="qa-a">Not with a stored credential — through Workload Identity. The Pod's ServiceAccount is federated via OIDC with an Azure Managed Identity that has RBAC read access on the Key Vault; the Secrets Store CSI driver uses that identity to pull the secret and mirror it into a Kubernetes Secret, which the Pod's env var actually references.</div></details>
+  <details class="qa"><summary>GitHub Actions vs Jenkins?</summary><div class="qa-a">Both deploy the exact same release: <code>migration-app-prod</code>, namespace <code>prod</code>, <code>values-prod.yaml</code>. What legitimately differs is the platform plumbing: GitHub Actions authenticates via the <code>azure/login</code> action and tags images with <code>github.sha</code>; Jenkins authenticates with stored service-principal credentials and tags images with <code>$BUILD_NUMBER</code>. Neither one injects the PostgreSQL password directly — both rely on <code>values-prod.yaml</code>'s Key Vault/CSI-driver configuration for that.</div></details>
+  <details class="qa"><summary>What is Terraform state?</summary><div class="qa-a">A JSON file recording which real Azure resource ID corresponds to each resource block in the <code>.tf</code> files — how <code>terraform plan</code> tells "doesn't exist yet" apart from "exists and unchanged." Without accurate state Terraform can't tell the difference and may try to recreate something already there.</div></details>
+  <details class="qa"><summary>Why is remote Terraform state used?</summary><div class="qa-a">It lives in an Azure Storage Account (<code>stmigrationlabtfstate</code>) instead of a local file, so it's identical for everyone applying changes and supports locking — two concurrent <code>apply</code> runs against the same local state would otherwise corrupt it or double-create resources.</div></details>
+  <details class="qa"><summary>How do you troubleshoot CrashLoopBackOff?</summary><div class="qa-a"><code>kubectl logs &lt;pod&gt; --previous</code> to read the last crash's output, then <code>kubectl describe pod</code> for the Events section, which usually names the exact reason: probe failure, OOMKilled, non-zero exit code, or missing config.</div></details>
+  <details class="qa"><summary>How are DEV, TEST and PROD separated?</summary><div class="qa-a">Three separate Helm releases of the same chart (<code>migration-app-dev</code>, <code>migration-app-test</code>, <code>migration-app-prod</code>) in three separate namespaces, driven by three separate values files. Only <code>values-prod.yaml</code> carries the full production configuration — Key Vault, ingress, operations-console settings, the correct port and probes.</div></details>
+  <details class="qa"><summary>What happens during a rolling update?</summary><div class="qa-a">The Deployment creates a new ReplicaSet with the updated Pod template. With <code>maxUnavailable: 0</code> and <code>maxSurge: 1</code>, Kubernetes starts one extra new Pod, waits for it to pass readinessProbe, then terminates one old Pod, repeating until every Pod is on the new template. Total replica count never drops below desired during the process.</div></details>
+  <details class="qa"><summary>Why do we use readiness and liveness probes?</summary><div class="qa-a">They answer different questions. Readiness: "can this Pod serve traffic right now?" — failing it pulls the Pod out of Endpoints, no restart. Liveness: "is this process still functioning?" — failing it kills and restarts the Pod. Making liveness depend on the database, for example, would turn an unrelated outage into a full restart loop instead of just marking Pods not-ready.</div></details>
+  <details class="qa"><summary>What is the role of ACR?</summary><div class="qa-a">The private registry both application images are pushed to and pulled from. AKS authenticates to it with the node pool's managed identity (granted the AcrPull role), so no registry credentials are stored in Kubernetes Secrets or CI variables for pulling images.</div></details>
+  <details class="qa"><summary>How does Ingress route traffic?</summary><div class="qa-a">The NGINX Ingress Controller watches Ingress objects and configures itself accordingly. Here, path <code>/</code> routes to the console's Service and <code>/pong(/|$)(.*)</code> (rewritten to strip the prefix) routes to Pong's Service — both on the same controller and public IP, distinguished purely by path since neither Ingress sets a host.</div></details>
+  <details class="qa"><summary>Why does PostgreSQL need persistent storage?</summary><div class="qa-a">A StatefulSet Pod can be deleted and rescheduled onto a different node at any time — without a PVC backing its data directory, a Postgres restart would come up as a brand-new, empty database. The PVC (backed by an Azure Disk) is what makes the data survive the Pod, not just the container.</div></details>
+  </div></details>
+
+  </div>
 </div>
 </section>
 <script>
@@ -79,6 +312,7 @@ const $=id=>document.getElementById(id);
 function auth(){return {'Authorization':'Bearer '+token,'Content-Type':'application/json'}}
 async function api(url,opt={}){opt.headers={...(opt.headers||{}),...auth()};const r=await fetch(url,opt);if(r.status===401){logout();throw new Error('Session expired.')}let d={};try{d=await r.json()}catch{}if(!r.ok)throw new Error(d.detail||('HTTP '+r.status));return d}
 function toggleRegister(){$('registerBox').classList.toggle('hidden')}
+function showTab(name){$('dashboardView').classList.toggle('hidden',name!=='dashboard');$('guideView').classList.toggle('hidden',name!=='guide');$('tabDash').classList.toggle('primary',name==='dashboard');$('tabGuide').classList.toggle('primary',name==='guide')}
 async function registerUser(){try{const d=await fetch('/api/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:$('regUser').value,email:$('regEmail').value,password:$('regPass').value})});const j=await d.json();if(!d.ok)throw new Error(j.detail||'Registration failed');$('regMsg').className='msg ok';$('regMsg').textContent=j.message}catch(e){$('regMsg').className='msg bad';$('regMsg').textContent=e.message}}
 async function doLogin(identity,password){try{const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({identity,password})});const d=await r.json();if(!r.ok)throw new Error(d.detail||'Login failed');token=d.token;role=d.role;username=d.username;expiresAt=d.expires_at*1000;$('loginView').classList.add('hidden');$('appView').classList.remove('hidden');$('userLine').textContent='user='+username+' role='+role;$('writeControls').classList.toggle('hidden',!(role==='user'||role==='admin'));$('startDemo').disabled=role==='guest';$('stopDemo').disabled=role==='guest';connectEvents();await refreshAll();setInterval(refreshAll,5000);setInterval(timers,500)}catch(e){$('loginMsg').textContent=e.message}}
 function login(){doLogin($('identity').value,$('password').value)}function guestLogin(){doLogin('guest','guest')}
