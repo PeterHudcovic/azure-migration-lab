@@ -1,8 +1,8 @@
 # Azure Migration Lab
 
-Praktický DevOps migračný lab zameraný na migráciu aplikácie a PostgreSQL databázy do Microsoft Azure.
+Hands-on DevOps migration lab focused on migrating an application and PostgreSQL database to Microsoft Azure.
 
-## Architektúra
+## Architecture
 
 ```text
 SOURCE / OLD ENVIRONMENT
