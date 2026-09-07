@@ -69,6 +69,19 @@ app = FastAPI(
 bearer = HTTPBearer(auto_error=False)
 
 
+@app.middleware("http")
+async def security_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Permissions-Policy"] = (
+        "accelerometer=(), camera=(), display-capture=(), fullscreen=(), "
+        "geolocation=(), gyroscope=(), microphone=(), payment=(), usb=()"
+    )
+    return response
+
+
 class LoginBody(BaseModel):
     identity: str = Field(min_length=1, max_length=120)
     password: str
@@ -237,7 +250,7 @@ async def history(user=Depends(current_user)):
 
 
 @app.get("/api/events")
-async def events(request: Request):
+async def events(request: Request, user=Depends(current_user)):
     q = asyncio.Queue()
     subscribers.add(q)
 
