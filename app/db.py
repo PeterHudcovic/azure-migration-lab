@@ -21,11 +21,12 @@ CREATE INDEX IF NOT EXISTS audit_at_idx ON audit (at DESC);
 CREATE TABLE IF NOT EXISTS app_users (
   id BIGSERIAL PRIMARY KEY,
   username TEXT UNIQUE NOT NULL,
-  email TEXT UNIQUE NOT NULL,
+  email TEXT UNIQUE,
   password_hash TEXT NOT NULL,
   role TEXT NOT NULL DEFAULT 'user',
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+ALTER TABLE app_users ALTER COLUMN email DROP NOT NULL;
 
 CREATE TABLE IF NOT EXISTS demo_control (
   id SMALLINT PRIMARY KEY DEFAULT 1 CHECK (id = 1),
@@ -102,11 +103,12 @@ async def register(username, email, password):
     if not _pool:
         raise RuntimeError("PostgreSQL unavailable")
     password_hash = bcrypt.hash(password)
+    email_value = email.lower() if email else None
     try:
         async with _pool.acquire() as c:
             await c.execute(
                 "INSERT INTO app_users(username,email,password_hash,role) VALUES($1,$2,$3,$4)",
-                username, email.lower(), password_hash, "user",
+                username, email_value, password_hash, "user",
             )
     except asyncpg.UniqueViolationError:
         raise ValueError("Username or email already exists.")

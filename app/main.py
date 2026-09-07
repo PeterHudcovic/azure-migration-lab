@@ -6,10 +6,11 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import jwt
-from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi import Depends, FastAPI, HTTPException, Query, Request
 from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from pydantic import BaseModel, EmailStr, Field
+from typing import Optional
+from pydantic import BaseModel, EmailStr, Field, field_validator
 
 import db
 import k8s_ops
@@ -89,8 +90,16 @@ class LoginBody(BaseModel):
 
 class RegisterBody(BaseModel):
     username: str = Field(min_length=3, max_length=32, pattern=r"^[A-Za-z0-9_.-]+$")
-    email: EmailStr
+    email: Optional[EmailStr] = None
     password: str = Field(min_length=8, max_length=128)
+
+    @field_validator("email", mode="before")
+    @classmethod
+    def _blank_email_to_none(cls, v):
+        if v is None:
+            return None
+        v = v.strip()
+        return v or None
 
 
 class ScaleBody(BaseModel):
@@ -191,6 +200,18 @@ async def terminal_typed(body: CommandBody, user=Depends(current_user)):
 @app.get("/api/check")
 async def check(user=Depends(current_user)):
     return k8s_ops.health_summary(db.is_up())
+
+
+@app.get("/api/logs/{workload}")
+async def pod_logs(
+    workload: str,
+    tail: int = Query(100, ge=1, le=200),
+    user=Depends(require("user", "admin")),
+):
+    try:
+        return k8s_ops.pod_logs(workload, tail)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc))
 
 
 @app.delete("/api/pods/{name}")

@@ -287,6 +287,51 @@ def parse_readonly_command(text: str):
     )
 
 
+# Server-side allowlist: only these workloads' logs may ever be read, always
+# in the single fixed namespace this console operates in. No client-supplied
+# workload, namespace, or container name is ever trusted.
+LOG_WORKLOADS = {
+    "migration-app-prod": "deployment",
+    "pong-app": "deployment",
+    "migration-postgresql": "statefulset",
+}
+
+
+def _workload_pod_selector(name, kind):
+    ns = cfg.TARGET_NAMESPACE
+    if kind == "deployment":
+        obj = _apps.read_namespaced_deployment(name, ns)
+    else:
+        obj = _apps.read_namespaced_stateful_set(name, ns)
+    labels = obj.spec.selector.match_labels or {}
+    return ",".join(f"{k}={v}" for k, v in labels.items())
+
+
+def pod_logs(workload, tail=100):
+    if workload not in LOG_WORKLOADS:
+        raise ValueError("Unknown or disallowed workload.")
+    tail = max(1, min(200, int(tail)))
+    ns = cfg.TARGET_NAMESPACE
+    try:
+        selector = _workload_pod_selector(workload, LOG_WORKLOADS[workload])
+        pods = sorted(
+            _core.list_namespaced_pod(ns, label_selector=selector).items,
+            key=lambda p: p.metadata.name,
+        )
+    except ApiException as exc:
+        raise ValueError(f"Workload {workload} not found ({exc.status})")
+    if not pods:
+        raise ValueError(f"No Pods found for {workload}.")
+    pod_name = pods[0].metadata.name
+    try:
+        text = _core.read_namespaced_pod_log(
+            pod_name, ns, tail_lines=tail, timestamps=False, previous=False
+        )
+    except ApiException as exc:
+        raise ValueError(f"Could not read logs for {pod_name} ({exc.status})")
+    return {"workload": workload, "pod": pod_name, "tail": tail, "output": text}
+
+
 def command_output(command_id):
     commands = {
         "pods": lambda: _pods(False),

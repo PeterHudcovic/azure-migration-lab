@@ -39,20 +39,22 @@
         <div style="margin-top:13px"><button class="btn primary" onclick="login()">SIGN IN</button></div>
         <div id="loginMsg" class="msg bad"></div>
         <hr style="border:0;border-top:1px dashed #bbb3c1;margin:17px 0">
-        <div class="rolebox"><b>Want to try the interactive features?</b><br>Create a free demo account and try it yourself:
+        <div class="rolebox"><b>Want to try the interactive features?</b>
+          <div class="cred" style="margin-top:9px">No email required &middot; No verification &middot; No marketing &middot; Demo only</div>
+          <div style="margin-top:11px">Create a free demo account and try it yourself:</div>
           <div class="pills" style="margin:9px 0 11px">
             <span class="pill">Scale Pong 1 &rarr; 5 replicas</span>
             <span class="pill">Trigger a rolling restart</span>
             <span class="pill">Start 15-min Demo Mode</span>
             <span class="pill">Watch Pods react live</span>
+            <span class="pill">Inspect live Pod logs</span>
             <span class="pill">All read-only cluster checks</span>
           </div>
-          <div class="cred">No email verification &middot; No marketing &middot; Demo use only</div>
-          <div style="margin-top:11px"><button class="btn" onclick="toggleRegister()">REGISTER</button></div>
+          <button class="btn" onclick="toggleRegister()">REGISTER</button>
         </div>
         <div id="registerBox" class="hidden" style="margin-top:10px">
           <label class="field">Username</label><input id="regUser">
-          <label class="field">Email</label><input id="regEmail" type="email">
+          <label class="field">Email <span class="bad">(optional)</span></label><input id="regEmail" type="email">
           <label class="field">Password (minimum 8 characters)</label><input id="regPass" type="password">
           <button class="btn primary" style="margin-top:11px" onclick="registerUser()">CREATE ACCOUNT</button>
           <div id="regMsg" class="msg"></div>
@@ -96,6 +98,19 @@
       <div class="panel" style="margin-top:11px"><h3>LIVE POD LIFECYCLE</h3><div class="pad eventlog" id="eventLog">Waiting for Kubernetes events...</div></div>
     </div>
   </div>
+
+  <div id="logsSection" class="hidden panel" style="margin-top:11px"><h3>POD LOGS</h3><div class="pad">
+    <div class="row" style="align-items:center">
+      <select id="logWorkload" style="padding:8px;border:1px solid #bbb4c1;background:#fafafa;flex:1;min-width:200px">
+        <option value="migration-app-prod">migration-app-prod</option>
+        <option value="pong-app">pong-app</option>
+        <option value="migration-postgresql">migration-postgresql</option>
+      </select>
+      <button class="btn" onclick="loadLogs()">REFRESH</button>
+    </div>
+    <div class="small" style="margin:7px 0">Last 100 lines &middot; Read-only</div>
+    <div id="podLogsOut" class="terminal" style="min-height:220px;max-height:340px">Select a workload and click REFRESH.</div>
+  </div></div>
 
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-top:11px">
     <div class="panel"><h3>AUDIT / DEPLOYMENT HISTORY</h3><div class="pad history" id="history">...</div></div>
@@ -323,7 +338,7 @@ async function api(url,opt={}){opt.headers={...(opt.headers||{}),...auth()};cons
 function toggleRegister(){$('registerBox').classList.toggle('hidden')}
 function showTab(name){$('dashboardView').classList.toggle('hidden',name!=='dashboard');$('guideView').classList.toggle('hidden',name!=='guide');$('tabDash').classList.toggle('primary',name==='dashboard');$('tabGuide').classList.toggle('primary',name==='guide')}
 async function registerUser(){try{const d=await fetch('/api/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:$('regUser').value,email:$('regEmail').value,password:$('regPass').value})});const j=await d.json();if(!d.ok)throw new Error(j.detail||'Registration failed');$('regMsg').className='msg ok';$('regMsg').textContent=j.message}catch(e){$('regMsg').className='msg bad';$('regMsg').textContent=e.message}}
-async function doLogin(identity,password){try{const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({identity,password})});const d=await r.json();if(!r.ok)throw new Error(d.detail||'Login failed');token=d.token;role=d.role;username=d.username;expiresAt=d.expires_at*1000;$('loginView').classList.add('hidden');$('appView').classList.remove('hidden');$('userLine').textContent='user='+username+' role='+role;$('writeControls').classList.toggle('hidden',!(role==='user'||role==='admin'));$('startDemo').disabled=role==='guest';$('stopDemo').disabled=role==='guest';connectEvents();await refreshAll();setInterval(refreshAll,5000);setInterval(timers,500)}catch(e){$('loginMsg').textContent=e.message}}
+async function doLogin(identity,password){try{const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({identity,password})});const d=await r.json();if(!r.ok)throw new Error(d.detail||'Login failed');token=d.token;role=d.role;username=d.username;expiresAt=d.expires_at*1000;$('loginView').classList.add('hidden');$('appView').classList.remove('hidden');$('userLine').textContent='user='+username+' role='+role;$('writeControls').classList.toggle('hidden',!(role==='user'||role==='admin'));$('logsSection').classList.toggle('hidden',!(role==='user'||role==='admin'));$('startDemo').disabled=role==='guest';$('stopDemo').disabled=role==='guest';connectEvents();await refreshAll();setInterval(refreshAll,5000);setInterval(timers,500)}catch(e){$('loginMsg').textContent=e.message}}
 function login(){doLogin($('identity').value,$('password').value)}function guestLogin(){doLogin('guest','guest')}
 function logout(){token='';location.reload()}
 function timers(){if(!expiresAt)return;const s=Math.max(0,Math.floor((expiresAt-Date.now())/1000));$('session').textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');if(s<=0)logout();if(window.demo){const now=Date.now();if(demo.active){$('demoRemaining').textContent=fmt(Math.max(0,Math.floor((Date.parse(demo.active_until)-now)/1000)));$('nextDeploy').textContent=fmt(Math.max(0,Math.floor((Date.parse(demo.next_run)-now)/1000)))}else{$('demoRemaining').textContent='--:--';$('nextDeploy').textContent='--:--'}}}
@@ -334,6 +349,7 @@ async function runTyped(){const c=$('cmd').value.trim();if(!c)return;try{termina
 async function health(){try{const d=await api('/api/check');terminal('$ health-check\n\nKubernetes API ........ '+d.kubernetes_api+'\nNodes Ready ........... '+d.nodes+'\nPods Running .......... '+d.pods+'\nPong Deployment ....... '+d.pong+'\nRollout ............... '+d.rollout+'\nPostgreSQL ............ '+d.postgresql+'\nIngress ............... '+d.ingress)}catch(e){terminal('health-check failed: '+e.message)}}
 async function refreshAll(){if(!token)return;try{state=await api('/api/state');const h=await api('/api/check');window.demo=await api('/api/demo');$('cNodes').textContent=h.nodes;$('cPods').textContent=h.pods;$('cPong').textContent=h.pong;$('cDb').textContent=h.postgresql.toUpperCase();$('cIngress').textContent=h.ingress.toUpperCase();$('cRollout').textContent=h.rollout;$('image').textContent=state.image||'-';$('replicas').textContent=(state.ready||0)+' / '+(state.desired||0);$('rollStatus').textContent=state.rolling?'ROLLING UPDATE':'STABLE';$('rollStatus').className=state.rolling?'status-roll':'status-live';$('demoState').textContent=demo.active?'ACTIVE':'OFF';document.body.classList.toggle('rolling',!!state.rolling);if(lastRolling&&!state.rolling)document.body.classList.add('successFlash');setTimeout(()=>document.body.classList.remove('successFlash'),1400);lastRolling=!!state.rolling;await loadHistory()}catch(e){console.error(e)}}
 async function loadHistory(){try{const h=await api('/api/history');$('history').innerHTML=h.map(x=>'<div class="hist"><b>'+esc(x.actor)+'</b> · '+esc(x.action)+' · '+esc(x.target||'')+'<br><span class="small">'+new Date(x.at).toLocaleString()+' '+esc(x.detail||'')+'</span></div>').join('')||'No history yet.'}catch{}}
+async function loadLogs(){const w=$('logWorkload').value;$('podLogsOut').textContent='Loading...';try{const d=await api('/api/logs/'+encodeURIComponent(w));$('podLogsOut').textContent='$ pod='+d.pod+'  tail='+d.tail+'\n\n'+(d.output||'(no output)')}catch(e){$('podLogsOut').textContent='ERROR: '+e.message}}
 function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 async function scaleBy(delta){if(!state)return;const n=Math.max(1,Math.min(state.max_replicas,state.desired+delta));try{await api('/api/scale',{method:'POST',body:JSON.stringify({replicas:n})});await refreshAll()}catch(e){alert(e.message)}}
 async function restart(){try{await api('/api/restart',{method:'POST'});await refreshAll()}catch(e){alert(e.message)}}
