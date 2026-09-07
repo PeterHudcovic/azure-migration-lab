@@ -46,6 +46,11 @@ spec:
             - name: PGDATA
               value: /var/lib/postgresql/data/pgdata
 
+          {{- with .Values.postgresql.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+
           volumeMounts:
             - name: postgres-data
               mountPath: /var/lib/postgresql/data

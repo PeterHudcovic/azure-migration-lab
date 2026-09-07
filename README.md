@@ -117,3 +117,33 @@ The AKS lab runs on a daily schedule to reduce unnecessary cloud cost.
 - Cluster stop: 20:00 Europe/Prague
 
 Azure Automation uses Managed Identity and RBAC to start and stop the AKS cluster without storing credentials.
+
+## Design Decisions
+
+This is a learning / portfolio AKS lab, not a production platform, and several
+things are intentionally out of scope rather than missing by oversight:
+
+- **Single node, limited infrastructure.** The cluster runs on one small node
+  to keep Azure cost low. There is no multi-node high-availability story here.
+- **Scheduled shutdown/startup** (see above) exists specifically to control
+  cloud cost on a constrained budget, not as a resilience feature.
+- **Production-grade HA, multi-region design, and enterprise-scale monitoring
+  are deliberately outside the scope** of this lab. Adding them would not fit
+  a single small node and would not change what the project is meant to show.
+- The project focuses on **deployment lifecycle, Kubernetes behavior,
+  troubleshooting, CI/CD, and observability through the Operations Console** —
+  understanding how a change moves from a `git push` to a running Pod, and
+  being able to inspect and reason about that process, rather than running a
+  large tool stack.
+- **What Terraform manages:** the Resource Group, Virtual Network, Subnet, AKS
+  cluster (including Workload Identity, OIDC and the Key Vault Secrets
+  Provider addon), ACR, Key Vault, and the AcrPull role assignment.
+- **What is deployed separately, outside Terraform:** the ingress-nginx and
+  cert-manager Helm releases and the `ClusterIssuer` (declarative config
+  tracked under `k8s/platform/`), the Azure Automation account/runbooks/
+  schedule (tracked under `automation/`), and the application Helm releases
+  themselves (`migration-app`, `pong-app`), which are deployed by CI/CD rather
+  than Terraform.
+- The goal of this project is to demonstrate specific engineering decisions
+  and trade-offs under a real constraint (cost), not to maximize the number
+  of tools used.
