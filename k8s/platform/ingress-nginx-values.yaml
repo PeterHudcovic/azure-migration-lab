@@ -1,0 +1,19 @@
+# Helm values for the ingress-nginx release (namespace: ingress-nginx).
+#
+# Pins the ingress-nginx LoadBalancer Service to the existing, already
+# Static Standard-SKU Azure Public IP instead of letting AKS allocate a new
+# one on next reconciliation. This does NOT create or move the IP — it only
+# tells the Azure cloud provider which existing IP resource to reuse.
+#
+# Applied with:
+#   helm upgrade ingress-nginx ingress-nginx/ingress-nginx \
+#     -n ingress-nginx --version 4.15.1 \
+#     -f k8s/platform/ingress-nginx-values.yaml
+#
+# Deliberately does NOT use spec.loadBalancerIP.
+
+controller:
+  service:
+    annotations:
+      service.beta.kubernetes.io/azure-load-balancer-resource-group: mc_rg-migration-lab_aks-migration-lab_swedencentral
+      service.beta.kubernetes.io/azure-pip-name: kubernetes-a042671e7d22441a39e0e48098d18e3b

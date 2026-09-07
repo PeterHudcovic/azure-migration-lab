@@ -55,13 +55,21 @@ readinessProbe:
 ingress:
   enabled: true
   className: nginx
-  annotations: {}
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
   hosts:
     - host: ""
       paths:
         - path: /
           pathType: Prefix
-  tls: []
+    - host: "ops.peterhudcovic.tech"
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - hosts:
+        - ops.peterhudcovic.tech
+      secretName: ops-peterhudcovic-tech-tls
 
 autoscaling:
   enabled: false

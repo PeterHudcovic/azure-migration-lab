@@ -39,10 +39,28 @@ resource "azurerm_kubernetes_cluster" "main" {
     node_count     = 1
     vm_size        = "Standard_B2s_v2"
     vnet_subnet_id = azurerm_subnet.aks.id
+
+    upgrade_settings {
+      max_surge = "10%"
+    }
   }
 
   identity {
     type = "SystemAssigned"
+  }
+
+  # Enabled out-of-band to support the Operations Console's Pod identity
+  # (ServiceAccount -> Workload Identity -> OIDC -> Managed Identity ->
+  # Azure Key Vault). Declared here so `terraform plan` matches reality
+  # instead of proposing to disable it.
+  oidc_issuer_enabled       = true
+  workload_identity_enabled = true
+
+  # Enabled out-of-band for the Key Vault Secrets Store CSI driver that
+  # delivers the PostgreSQL password to Pods without storing it in Git.
+  key_vault_secrets_provider {
+    secret_rotation_enabled  = false
+    secret_rotation_interval = "2m"
   }
 }
 

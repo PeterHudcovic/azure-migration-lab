@@ -4,35 +4,35 @@
 
 Check deployment history:
 
-helm history migration-app
+helm history migration-app-prod -n prod
 
 Rollback to a previous revision:
 
-helm rollback migration-app <REVISION>
+helm rollback migration-app-prod <REVISION> -n prod
 
 Verify the deployment:
 
-kubectl rollout status deployment/migration-app
+kubectl rollout status deployment/migration-app-prod -n prod
 
 ## Kubernetes rollback
 
 Check rollout history:
 
-kubectl rollout history deployment/migration-app
+kubectl rollout history deployment/migration-app-prod -n prod
 
 Rollback the Deployment:
 
-kubectl rollout undo deployment/migration-app
+kubectl rollout undo deployment/migration-app-prod -n prod
 
 ## Application validation
 
 Check Pods:
 
-kubectl get pods
+kubectl get pods -n prod
 
 Check application logs:
 
-kubectl logs deployment/migration-app
+kubectl logs deployment/migration-app-prod -n prod
 
 Check application health endpoint:
 

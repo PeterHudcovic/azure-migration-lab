@@ -1,0 +1,28 @@
+# cert-manager ClusterIssuer for Let's Encrypt production certificates.
+#
+# Used by the migration-app-prod Ingress (cert-manager.io/cluster-issuer:
+# letsencrypt-prod annotation) to issue and renew the TLS certificate for
+# ops.peterhudcovic.tech via HTTP-01 challenge through the nginx Ingress
+# class. The pong-app Ingress shares the resulting Secret but does not
+# carry its own issuer annotation, so only one Certificate is created for
+# the shared TLS secret.
+#
+# Requires cert-manager to already be installed (namespace: cert-manager).
+#
+# Apply with:
+#   kubectl apply -f k8s/platform/letsencrypt-prod-clusterissuer.yaml
+
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: peter.hudcovic@gmail.com
+    privateKeySecretRef:
+      name: letsencrypt-prod-key
+    solvers:
+      - http01:
+          ingress:
+            ingressClassName: nginx
