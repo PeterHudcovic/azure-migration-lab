@@ -39,8 +39,17 @@
         <div style="margin-top:13px"><button class="btn primary" onclick="login()">SIGN IN</button></div>
         <div id="loginMsg" class="msg bad"></div>
         <hr style="border:0;border-top:1px dashed #bbb3c1;margin:17px 0">
-        <b>New user?</b><div class="small" style="margin:7px 0">Register with username, email and password. Registered users can use all read-only cluster checks, scale Pong from 1 to 5 replicas, start a rolling restart and run the 15-minute Demo Mode.</div>
-        <button class="btn" onclick="toggleRegister()">REGISTER</button>
+        <div class="rolebox"><b>Want to try the interactive features?</b><br>Create a free demo account and try it yourself:
+          <div class="pills" style="margin:9px 0 11px">
+            <span class="pill">Scale Pong 1 &rarr; 5 replicas</span>
+            <span class="pill">Trigger a rolling restart</span>
+            <span class="pill">Start 15-min Demo Mode</span>
+            <span class="pill">Watch Pods react live</span>
+            <span class="pill">All read-only cluster checks</span>
+          </div>
+          <div class="cred">No email verification &middot; No marketing &middot; Demo use only</div>
+          <div style="margin-top:11px"><button class="btn" onclick="toggleRegister()">REGISTER</button></div>
+        </div>
         <div id="registerBox" class="hidden" style="margin-top:10px">
           <label class="field">Username</label><input id="regUser">
           <label class="field">Email</label><input id="regEmail" type="email">
