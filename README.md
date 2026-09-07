@@ -41,3 +41,14 @@ Helm
 AKS
   ├── migration-app Deployment
   └── PostgreSQL StatefulSet + PVC
+```
+
+## Scheduled Cost Optimization
+
+The AKS lab runs on a daily schedule to reduce unnecessary cloud cost.
+
+- Cluster start: 07:45 Europe/Prague
+- Public availability: approximately 08:00–20:00 Europe/Prague
+- Cluster stop: 20:00 Europe/Prague
+
+Azure Automation uses Managed Identity and RBAC to start and stop the AKS cluster without storing credentials.

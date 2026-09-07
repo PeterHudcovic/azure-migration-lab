@@ -1,0 +1,16 @@
+{
+  "Name": "AKS Start-Stop Operator",
+  "IsCustom": true,
+  "Description": "Minimum permissions to read, start and stop a specific AKS cluster. No other actions permitted.",
+  "Actions": [
+    "Microsoft.ContainerService/managedClusters/read",
+    "Microsoft.ContainerService/managedClusters/start/action",
+    "Microsoft.ContainerService/managedClusters/stop/action"
+  ],
+  "NotActions": [],
+  "DataActions": [],
+  "NotDataActions": [],
+  "AssignableScopes": [
+    "/subscriptions/8b38e1d5-139f-4006-8f2b-ffb32a6ac114/resourceGroups/rg-migration-lab"
+  ]
+}
