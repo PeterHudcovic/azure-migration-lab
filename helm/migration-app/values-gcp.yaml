@@ -1,0 +1,93 @@
+# GCP clone of values-prod.yaml. Differences from Azure prod:
+#   - keyVault disabled: no Key Vault CSI / workload identity available here,
+#     so postgres password comes from a plain values-supplied secret instead
+#     (chart's built-in postgresql-secret.yaml template covers this when
+#     keyVault.enabled=false; the value itself is passed with --set-file at
+#     deploy time, never committed).
+#   - no ingress: no ingress controller is installed in this cluster (the
+#     CI service account's container.developer IAM role deliberately excludes
+#     rbac.authorization.k8s.io resource management, which any ingress
+#     controller needs for its own ClusterRole - granting container.admin to
+#     fix this was blocked by the session's own privilege-escalation guard,
+#     correctly, since it would let the CI identity self-elevate). The
+#     Service is exposed directly as a GCP L4 LoadBalancer instead - no RBAC
+#     objects needed, and it still satisfies "reachable over a plain public
+#     IP, no DNS/TLS/Cloudflare".
+#   - operations.enabled is false: the same RBAC restriction blocks
+#     operations-rbac.yaml's Role/RoleBinding/ClusterRole/ClusterRoleBinding,
+#     so the Operations Console's pod-list/scale/log features can't function
+#     here. The FastAPI app + Postgres are otherwise fully functional.
+#   - replicaCount 1 and trimmed cpu/memory requests: this cluster's single
+#     e2-medium node has only 940m allocatable CPU, and GKE's own system
+#     DaemonSets (Dataplane V2/netd, CSI node drivers, logging/metrics
+#     agents) already consume ~860m of that on a standard (non-Autopilot)
+#     node - leaving very little room. Scaling to a second node or a bigger
+#     machine type would fix this more robustly but roughly doubles compute
+#     cost; trimming requests keeps this within the already-provisioned,
+#     already-approved terraform sizing.
+replicaCount: 1
+environment: prod
+
+image:
+  repository: europe-west1-docker.pkg.dev/migration-lab-gcp-clone/migration-lab/migration-app
+  tag: "e97c43c"
+  pullPolicy: IfNotPresent
+
+containerPort: 8000
+
+serviceAccount:
+  create: true
+  automount: true
+  annotations: {}
+  name: ""
+
+databaseSecretName: migration-postgresql-secret
+
+postgresql:
+  enabled: true
+  image: postgres:16
+  database: migrationdb
+  username: migrationuser
+  password: "" # supplied via --set-file at deploy time from terraform output
+  storage: 5Gi
+  resources:
+    requests:
+      cpu: 10m
+      memory: 64Mi
+    limits:
+      memory: 256Mi
+
+keyVault:
+  enabled: false
+
+operations:
+  enabled: false
+
+livenessProbe:
+  httpGet:
+    path: /healthz
+    port: http
+
+readinessProbe:
+  httpGet:
+    path: /readyz
+    port: http
+  initialDelaySeconds: 5
+
+ingress:
+  enabled: false
+
+service:
+  type: LoadBalancer
+  port: 80
+
+resources:
+  requests:
+    cpu: 10m
+    memory: 64Mi
+  limits:
+    cpu: 250m
+    memory: 256Mi
+
+autoscaling:
+  enabled: false

@@ -1,0 +1,21 @@
+# GCP clone: no ingress controller installed in this cluster (see
+# helm/migration-app/values-gcp.yaml comment), so pong stays ClusterIP-only.
+# It's only ever reached internally, as the scale target of the Operations
+# Console demo - it doesn't need to be internet-facing itself.
+replicaCount: 1
+
+image:
+  repository: europe-west1-docker.pkg.dev/migration-lab-gcp-clone/migration-lab/pong-app
+  tag: "e97c43c"
+  pullPolicy: IfNotPresent
+
+ingress:
+  enabled: false
+
+resources:
+  requests:
+    cpu: 10m
+    memory: 20Mi
+  limits:
+    cpu: 100m
+    memory: 64Mi

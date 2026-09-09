@@ -1,0 +1,99 @@
+name: Build and Deploy to GKE (GCP clone)
+
+on:
+  push:
+    branches:
+      - gcp-exact-clone
+    paths:
+      - "app/**"
+      - "pong/**"
+      - "helm/migration-app/**"
+      - "helm/pong-app/**"
+      - ".github/workflows/deploy-gcp.yml"
+  workflow_dispatch:
+
+env:
+  PROJECT_ID: migration-lab-gcp-clone
+  REGION: europe-west1
+  ZONE: europe-west1-b
+  CLUSTER: gke-migration-lab
+  REGISTRY: europe-west1-docker.pkg.dev/migration-lab-gcp-clone/migration-lab
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
+
+      - name: Build migration-app image
+        run: |
+          docker build \
+            -t ${{ env.REGISTRY }}/migration-app:${{ github.sha }} \
+            ./app
+
+      - name: Scan image with Trivy
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: ${{ env.REGISTRY }}/migration-app:${{ github.sha }}
+          severity: "CRITICAL,HIGH"
+          exit-code: "1"
+          ignore-unfixed: true
+
+      - name: Build pong-app image
+        run: |
+          docker build \
+            -t ${{ env.REGISTRY }}/pong-app:${{ github.sha }} \
+            ./pong
+
+      - name: Push images
+        run: |
+          docker push ${{ env.REGISTRY }}/migration-app:${{ github.sha }}
+          docker push ${{ env.REGISTRY }}/pong-app:${{ github.sha }}
+
+      - name: Get GKE credentials
+        uses: google-github-actions/get-gke-credentials@v2
+        with:
+          cluster_name: ${{ env.CLUSTER }}
+          location: ${{ env.ZONE }}
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v4
+
+      - name: Deploy migration-app with Helm
+        run: |
+          # Postgres password: reuse the value already running in the cluster
+          # (originally seeded from Secret Manager, see terraform-gcp/) rather
+          # than re-supplying it here, since the secret already exists and
+          # the StatefulSet's PVC already has data under it.
+          PGPW="$(kubectl get secret migration-postgresql-secret -n prod -o jsonpath='{.data.POSTGRES_PASSWORD}' | base64 -d)"
+          helm upgrade --install migration-app-prod ./helm/migration-app \
+            --namespace prod \
+            -f ./helm/migration-app/values-prod.yaml \
+            -f ./helm/migration-app/values-gcp.yaml \
+            --set image.tag=${{ github.sha }} \
+            --set-string postgresql.password="$PGPW"
+
+      - name: Deploy pong-app with Helm
+        run: |
+          helm upgrade --install pong-app ./helm/pong-app \
+            --namespace prod \
+            -f ./helm/pong-app/values-gcp.yaml \
+            --set image.tag=${{ github.sha }}
+
+      - name: Verify rollout
+        run: |
+          kubectl rollout status deployment/migration-app-prod --namespace prod --timeout=180s
+          kubectl rollout status deployment/pong-app --namespace prod --timeout=120s
