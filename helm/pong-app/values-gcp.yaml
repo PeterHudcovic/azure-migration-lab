@@ -1,16 +1,15 @@
-# GCP clone: no ingress controller installed in this cluster (see
-# helm/migration-app/values-gcp.yaml comment), so pong stays ClusterIP-only.
-# It's only ever reached internally, as the scale target of the Operations
-# Console demo - it doesn't need to be internet-facing itself.
+# GCP clone: ingress-nginx is now installed (see
+# helm/migration-app/values-gcp.yaml comment), so pong is reachable at
+# /pong on the same ingress-nginx-controller public IP as the console,
+# matching the Azure prod topology. Base values.yaml's ingress block
+# (className nginx, rewrite-target regex, path /pong(/|$)(.*)) already
+# has no host restriction on its first rule, so no override is needed here.
 replicaCount: 1
 
 image:
   repository: europe-west1-docker.pkg.dev/migration-lab-gcp-clone/migration-lab/pong-app
-  tag: "e97c43c"
+  tag: "content-1788917220"
   pullPolicy: IfNotPresent
-
-ingress:
-  enabled: false
 
 resources:
   requests:

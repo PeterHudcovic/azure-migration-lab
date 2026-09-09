@@ -4,19 +4,24 @@
 #     (chart's built-in postgresql-secret.yaml template covers this when
 #     keyVault.enabled=false; the value itself is passed with --set-file at
 #     deploy time, never committed).
-#   - no ingress: no ingress controller is installed in this cluster (the
-#     CI service account's container.developer IAM role deliberately excludes
-#     rbac.authorization.k8s.io resource management, which any ingress
-#     controller needs for its own ClusterRole - granting container.admin to
-#     fix this was blocked by the session's own privilege-escalation guard,
-#     correctly, since it would let the CI identity self-elevate). The
-#     Service is exposed directly as a GCP L4 LoadBalancer instead - no RBAC
-#     objects needed, and it still satisfies "reachable over a plain public
-#     IP, no DNS/TLS/Cloudflare".
-#   - operations.enabled is false: the same RBAC restriction blocks
-#     operations-rbac.yaml's Role/RoleBinding/ClusterRole/ClusterRoleBinding,
-#     so the Operations Console's pod-list/scale/log features can't function
-#     here. The FastAPI app + Postgres are otherwise fully functional.
+#   - ingress-nginx IS installed here (its own ClusterRole/RoleBinding were
+#     created via a one-time, narrowly-scoped, time-boxed container.admin
+#     grant on the CI service account - granted immediately before `helm
+#     install ingress-nginx`, revoked immediately after; day-to-day deploys
+#     run under the permanent container.developer role). Service is
+#     ClusterIP behind the ingress, matching the Azure prod topology (single
+#     public IP, path-based routing) instead of its own direct LoadBalancer.
+#   - ingress host is "" (catch-all, same pattern as values-prod.yaml's
+#     first host entry) since this clone has no DNS - reachable by the
+#     ingress-nginx-controller Service's raw external IP only.
+#   - operations.enabled is true: operations-rbac.yaml's Role/RoleBinding
+#     (namespace-scoped: pods/services/events/deployments/ingresses) and
+#     ClusterRole/ClusterRoleBinding (cluster-scoped: nodes only, read-only)
+#     were created via the same one-time, time-boxed container.admin grant
+#     used for ingress-nginx - granted immediately before `helm upgrade`,
+#     revoked immediately after. The console's ServiceAccount needs no GCP
+#     IAM identity for this (Kubernetes RBAC is cluster-native, unrelated to
+#     cloud IAM), so no Workload Identity annotation is set here.
 #   - replicaCount 1 and trimmed cpu/memory requests: this cluster's single
 #     e2-medium node has only 940m allocatable CPU, and GKE's own system
 #     DaemonSets (Dataplane V2/netd, CSI node drivers, logging/metrics
@@ -30,7 +35,7 @@ environment: prod
 
 image:
   repository: europe-west1-docker.pkg.dev/migration-lab-gcp-clone/migration-lab/migration-app
-  tag: "e97c43c"
+  tag: "content-1788917430"
   pullPolicy: IfNotPresent
 
 containerPort: 8000
@@ -61,7 +66,7 @@ keyVault:
   enabled: false
 
 operations:
-  enabled: false
+  enabled: true
 
 livenessProbe:
   httpGet:
@@ -75,10 +80,18 @@ readinessProbe:
   initialDelaySeconds: 5
 
 ingress:
-  enabled: false
+  enabled: true
+  className: nginx
+  annotations: {}
+  hosts:
+    - host: ""
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
 
 service:
-  type: LoadBalancer
+  type: ClusterIP
   port: 80
 
 resources:
