@@ -1,11 +1,17 @@
 <!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AKS Operations Lab</title>
+<style>
+:root{--lg:#DCEEFF;--lg2:#EEF7FF;--bg:#F4F9FD;--border:#A8C9E8;--ink:#17212B;--muted:#607080;--accent:#0078D4;--term:#111820;--termtext:#E8F2FA;--ok:#2E7D4F;--bad:#B33A3A;--warn:#9A6A16}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:Consolas,"Cascadia Mono","Courier New",monospace;font-size:13px}button,input{font:inherit}.hidden{display:none!important}.wrap{width:min(1500px,96vw);margin:22px auto}.bar{background:var(--lg);border:1px solid var(--border);padding:16px 19px}.brand{font-size:20px;font-weight:700;color:var(--accent)}.sub{margin-top:6px;color:var(--muted);font-size:12px}.panel{background:#fff;border:1px solid var(--border)}.panel h3{margin:0;padding:10px 12px;background:var(--lg);color:var(--accent);font-size:13px}.pad{padding:13px}.btn{border:1px solid #9d94a5;background:#f8f7f9;padding:8px 11px;cursor:pointer;color:var(--ink)}.btn:hover{background:var(--lg2)}.btn.primary{background:var(--lg);font-weight:700}.btn.danger{border-color:#b88e95;color:#7f3039}.btn:disabled{opacity:.45;cursor:not-allowed}.login-grid{width:min(980px,96vw);margin:70px auto 0;display:grid;grid-template-columns:1fr 1fr;gap:16px}.field{display:block;margin:11px 0 5px;color:var(--muted)}input{width:100%;padding:9px;border:1px solid #bbb4c1;background:#fafafa}.rolebox{padding:13px;border:1px solid #d4cfd8;background:#faf9fb;line-height:1.65;margin-bottom:11px}.cred{display:inline-block;margin-top:9px;padding:8px 10px;background:#ece9ee;border:1px solid #c9c3ce}.small{font-size:12px;color:var(--muted);line-height:1.55}.msg{margin-top:10px;min-height:18px}.ok{color:var(--ok)}.bad{color:var(--bad)}.cards{display:grid;grid-template-columns:repeat(6,1fr);gap:9px;margin:11px 0}.card{background:#fff;border:1px solid var(--border);padding:11px}.card small{color:var(--muted)}.card b{display:block;margin-top:5px}.layout{display:grid;grid-template-columns:215px minmax(520px,1fr) 340px;gap:11px}.cmds .btn{display:block;width:100%;text-align:left;margin:6px 0}.terminal{background:var(--term);color:var(--termtext);min-height:460px;max-height:580px;overflow:auto;padding:14px;white-space:pre;font-size:12px;line-height:1.5}.prompt{color:#cbb8da}.terminal-input{display:flex;background:var(--term);border-top:1px solid #3b3740;padding:9px}.terminal-input span{color:#cbb8da;padding:8px 4px 0 0}.terminal-input input{border:0;outline:0;background:transparent;color:#fff;padding:7px;flex:1}.box{border:1px solid #d1cbd6;padding:10px;margin-bottom:9px}.big{font-size:26px;font-weight:700}.row{display:flex;gap:7px;flex-wrap:wrap}.pills{display:flex;gap:7px;flex-wrap:wrap}.pill{padding:4px 7px;border:1px solid #c9c2cf;background:#f6f5f7}.history{max-height:230px;overflow:auto;font-size:11px}.hist{padding:6px 0;border-bottom:1px dotted #ccc}.eventlog{max-height:190px;overflow:auto;font-size:11px;line-height:1.5}.rolling body,.rolling{background:#d8d8da!important}.successFlash{animation:flash 1.3s ease}@keyframes flash{0%{background:#d8eadf}100%{background:var(--bg)}}.explain{margin-top:11px;line-height:1.55}.status-live{color:var(--ok)}.status-roll{color:var(--warn)}@media(max-width:1050px){.layout{grid-template-columns:1fr}.cards{grid-template-columns:repeat(3,1fr)}.login-grid{grid-template-columns:1fr}}
 .tabs{display:flex;gap:7px;margin:11px 0}
 .tabs .btn{padding:8px 16px}
 .gsec{background:#fff;border:1px solid var(--border);margin-bottom:9px}
 .gsec>summary{list-style:none;cursor:pointer;padding:11px 14px;background:var(--lg);color:var(--accent);font-weight:700;font-size:13px;display:flex;justify-content:space-between;align-items:center}
 .gsec>summary::-webkit-details-marker{display:none}
-:root{--lg:#DCEEFF;--lg2:#EEF7FF;--bg:#F4F9FD;--border:#A8C9E8;--ink:#17212B;--muted:#607080;--accent:#0078D4;--term:#111820;--termtext:#E8F2FA;--ok:#2E7D4F;--bad:#B33A3A;--warn:#9A6A16}
 .gsec>summary:after{content:'+ expand';font-size:11px;font-weight:400;color:var(--accent)}
 .gsec[open]>summary:after{content:'\2212 collapse'}
 .gsec .gbody{padding:15px 17px;line-height:1.6}
@@ -324,6 +330,7 @@ PostgreSQL</div>
   </div>
 </div>
 </section>
+
 <script>
 let token='',role='',username='',expiresAt=0,state=null,lastRolling=false;
 const $=id=>document.getElementById(id);
@@ -333,7 +340,8 @@ function toggleRegister(){$('registerBox').classList.toggle('hidden')}
 function showTab(name){$('dashboardView').classList.toggle('hidden',name!=='dashboard');$('guideView').classList.toggle('hidden',name!=='guide');$('tabDash').classList.toggle('primary',name==='dashboard');$('tabGuide').classList.toggle('primary',name==='guide')}
 async function registerUser(){try{const d=await fetch('/api/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:$('regUser').value,email:$('regEmail').value,password:$('regPass').value})});const j=await d.json();if(!d.ok)throw new Error(j.detail||'Registration failed');$('regMsg').className='msg ok';$('regMsg').textContent=j.message}catch(e){$('regMsg').className='msg bad';$('regMsg').textContent=e.message}}
 async function doLogin(identity,password){try{const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({identity,password})});const d=await r.json();if(!r.ok)throw new Error(d.detail||'Login failed');token=d.token;role=d.role;username=d.username;expiresAt=d.expires_at*1000;$('loginView').classList.add('hidden');$('appView').classList.remove('hidden');$('userLine').textContent='user='+username+' role='+role;$('writeControls').classList.toggle('hidden',!(role==='user'||role==='admin'));$('logsSection').classList.toggle('hidden',!(role==='user'||role==='admin'));$('startDemo').disabled=role==='guest';$('stopDemo').disabled=role==='guest';connectEvents();await refreshAll();setInterval(refreshAll,5000);setInterval(timers,500)}catch(e){$('loginMsg').textContent=e.message}}
-function login(){doLogin($('identity').value,$('password').value)}function guestLogin(){doLogin('guest','guest')}
+function login(){doLogin($('identity').value,$('password').value)}
+function guestLogin(){doLogin('guest','guest')}
 function logout(){token='';location.reload()}
 function timers(){if(!expiresAt)return;const s=Math.max(0,Math.floor((expiresAt-Date.now())/1000));$('session').textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');if(s<=0)logout();if(window.demo){const now=Date.now();if(demo.active){$('demoRemaining').textContent=fmt(Math.max(0,Math.floor((Date.parse(demo.active_until)-now)/1000)));$('nextDeploy').textContent=fmt(Math.max(0,Math.floor((Date.parse(demo.next_run)-now)/1000)))}else{$('demoRemaining').textContent='--:--';$('nextDeploy').textContent='--:--'}}}
 function fmt(s){return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
@@ -347,10 +355,11 @@ async function loadLogs(){const w=$('logWorkload').value;$('podLogsOut').textCon
 function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 async function scaleBy(delta){if(!state)return;const n=Math.max(1,Math.min(state.max_replicas,state.desired+delta));try{await api('/api/scale',{method:'POST',body:JSON.stringify({replicas:n})});await refreshAll()}catch(e){alert(e.message)}}
 async function restart(){try{await api('/api/restart',{method:'POST'});await refreshAll()}catch(e){alert(e.message)}}
-async function demoStart(){try{window.demo=await api('/api/demo/start',{method:'POST'});await refreshAll()}catch(e){alert(e.message)}}async function demoStop(){try{window.demo=await api('/api/demo/stop',{method:'POST'});await refreshAll()}catch(e){alert(e.message)}}
+async function demoStart(){try{window.demo=await api('/api/demo/start',{method:'POST'});await refreshAll()}catch(e){alert(e.message)}}
+async function demoStop(){try{window.demo=await api('/api/demo/stop',{method:'POST'});await refreshAll()}catch(e){alert(e.message)}}
 function openPong(){window.open('/pong','pongWindow','width=900,height=700,resizable=yes,scrollbars=yes,menubar=no,toolbar=no,location=yes')}
 function renderEvent(x){const div=document.createElement('div');div.textContent=(x.at||'')+'  '+(x.pod?x.pod+' → '+x.phase:(x.message||x.kind));$('eventLog').prepend(div);while($('eventLog').children.length>30)$('eventLog').lastChild.remove()}
 async function connectEvents(){while(token){try{const r=await fetch('/api/events',{headers:auth()});if(r.status===401){logout();return}if(!r.ok||!r.body)throw new Error('stream '+r.status);const reader=r.body.getReader();const decoder=new TextDecoder();let buf='';while(true){const{value,done}=await reader.read();if(done)break;buf+=decoder.decode(value,{stream:true});let idx;while((idx=buf.indexOf('\n\n'))!==-1){const raw=buf.slice(0,idx);buf=buf.slice(idx+2);const line=raw.split('\n').find(l=>l.startsWith('data: '));if(!line)continue;try{renderEvent(JSON.parse(line.slice(6)))}catch{}}}}catch(e){}if(!token)break;await new Promise(res=>setTimeout(res,3000))}}
 </script>
 </body>
-</html>
+  </html>
