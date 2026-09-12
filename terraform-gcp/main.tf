@@ -175,3 +175,22 @@ resource "google_project_iam_member" "gha_gke_developer" {
   role   = "roles/container.developer"
   member = "serviceAccount:${google_service_account.github_actions.email}"
 }
+
+# Node pool resize (sleep/wake-lab.yml) needs exactly container.clusters.update,
+# which container.developer doesn't grant. Rather than reach for
+# roles/container.admin or roles/container.clusterAdmin (both also grant
+# cluster-scoped RBAC management, exactly what gha_gke_developer's comment
+# above deliberately avoids), this is a custom role with that single
+# permission and nothing else.
+resource "google_project_iam_custom_role" "gke_node_pool_resizer" {
+  role_id     = "gkeNodePoolResizer"
+  title       = "GKE Node Pool Resizer"
+  description = "Only container.clusters.update, for scaling the node pool to/from 0 (sleep/wake)."
+  permissions = ["container.clusters.update"]
+}
+
+resource "google_project_iam_member" "gha_node_pool_resizer" {
+  project = var.project_id
+  role    = google_project_iam_custom_role.gke_node_pool_resizer.id
+  member  = "serviceAccount:${google_service_account.github_actions.email}"
+}

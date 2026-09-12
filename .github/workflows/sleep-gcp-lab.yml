@@ -1,0 +1,96 @@
+name: SLEEP GCP LAB
+
+# Manual only - never runs on push. Scales the GCP clone's workloads and
+# node pool to 0 to stop compute billing while preserving everything that
+# costs nothing to keep: PostgreSQL's PVC/data, the GKE cluster control
+# plane itself, Artifact Registry, Terraform state, and the LoadBalancer /
+# external IP.
+on:
+  workflow_dispatch:
+
+env:
+  PROJECT_ID: migration-lab-gcp-clone
+  ZONE: europe-west1-b
+  CLUSTER: gke-migration-lab
+  NODE_POOL: system
+
+jobs:
+  sleep:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Get GKE credentials
+        uses: google-github-actions/get-gke-credentials@v2
+        with:
+          cluster_name: ${{ env.CLUSTER }}
+          location: ${{ env.ZONE }}
+
+      - name: Scale application workloads to 0
+        run: |
+          kubectl scale deployment migration-app-prod -n prod --replicas=0
+          kubectl scale deployment pong-app -n prod --replicas=0
+          kubectl scale statefulset migration-postgresql -n prod --replicas=0
+
+      - name: Wait for prod Pods to terminate
+        run: |
+          for i in $(seq 1 30); do
+            count="$(kubectl get pods -n prod --no-headers 2>/dev/null | wc -l)"
+            echo "prod Pods remaining: $count"
+            [ "$count" -eq 0 ] && exit 0
+            sleep 10
+          done
+          echo "::warning::Pods still present after 5 minutes, proceeding to node pool resize anyway"
+
+      - name: Disable node pool autoscaling if enabled
+        run: |
+          AUTOSCALING="$(gcloud container node-pools describe ${{ env.NODE_POOL }} \
+            --cluster=${{ env.CLUSTER }} --zone=${{ env.ZONE }} --project=${{ env.PROJECT_ID }} \
+            --format='value(autoscaling.enabled)')"
+          if [ "$AUTOSCALING" = "True" ]; then
+            echo "Autoscaling is enabled on ${{ env.NODE_POOL }}; disabling it before resizing to 0."
+            gcloud container node-pools update ${{ env.NODE_POOL }} \
+              --cluster=${{ env.CLUSTER }} --zone=${{ env.ZONE }} --project=${{ env.PROJECT_ID }} \
+              --no-enable-autoscaling --quiet
+          else
+            echo "Autoscaling is not enabled; nothing to do."
+          fi
+
+      - name: Resize node pool to 0
+        run: |
+          gcloud container clusters resize ${{ env.CLUSTER }} \
+            --node-pool=${{ env.NODE_POOL }} \
+            --num-nodes=0 \
+            --zone=${{ env.ZONE }} \
+            --project=${{ env.PROJECT_ID }} \
+            --quiet
+
+      - name: Verify 0 nodes and no leftover Compute Engine VMs
+        run: |
+          NODE_COUNT="$(kubectl get nodes --no-headers 2>/dev/null | wc -l)"
+          echo "kubectl node count: $NODE_COUNT"
+          VM_COUNT="$(gcloud compute instances list --project=${{ env.PROJECT_ID }} \
+            --filter="name~^gke-${{ env.CLUSTER }}-${{ env.NODE_POOL }}" \
+            --format='value(name)' | wc -l)"
+          echo "Compute Engine VM count for node pool: $VM_COUNT"
+          if [ "$NODE_COUNT" -ne 0 ] || [ "$VM_COUNT" -ne 0 ]; then
+            echo "::error::Sleep did not fully scale down (nodes=$NODE_COUNT, VMs=$VM_COUNT)"
+            exit 1
+          fi
+          echo "Lab is asleep: 0 nodes, 0 Compute Engine VMs, workloads at 0 replicas."
+
+      - name: Confirm what was preserved
+        run: |
+          echo "--- PVC (should still be Bound) ---"
+          kubectl get pvc -n prod
+          echo "--- LoadBalancer external IP (should be unchanged) ---"
+          kubectl get svc ingress-nginx-controller -n ingress-nginx -o jsonpath='{.status.loadBalancer.ingress[0].ip}'
+          echo
+          echo "--- GKE cluster (should still exist) ---"
+          gcloud container clusters describe ${{ env.CLUSTER }} --zone=${{ env.ZONE }} --project=${{ env.PROJECT_ID }} --format='value(name,status)'

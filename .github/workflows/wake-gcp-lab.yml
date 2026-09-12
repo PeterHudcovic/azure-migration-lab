@@ -1,0 +1,126 @@
+name: WAKE GCP LAB
+
+# Manual only - never runs on push. Reverses SLEEP GCP LAB: brings the node
+# pool back to 1, then PostgreSQL, then the applications, verifying each
+# stage before moving to the next.
+on:
+  workflow_dispatch:
+
+env:
+  PROJECT_ID: migration-lab-gcp-clone
+  ZONE: europe-west1-b
+  CLUSTER: gke-migration-lab
+  NODE_POOL: system
+  # Fixed, deterministic target replica counts - matches
+  # helm/migration-app/values-gcp.yaml and helm/pong-app/values-gcp.yaml
+  # (replicaCount: 1 for both, sized for this single-node cluster), not
+  # whatever happened to be running before the last SLEEP.
+  APP_REPLICAS: 1
+  PONG_REPLICAS: 1
+
+jobs:
+  wake:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Resize node pool to 1
+        run: |
+          gcloud container clusters resize ${{ env.CLUSTER }} \
+            --node-pool=${{ env.NODE_POOL }} \
+            --num-nodes=1 \
+            --zone=${{ env.ZONE }} \
+            --project=${{ env.PROJECT_ID }} \
+            --quiet
+
+      - name: Get GKE credentials
+        uses: google-github-actions/get-gke-credentials@v2
+        with:
+          cluster_name: ${{ env.CLUSTER }}
+          location: ${{ env.ZONE }}
+
+      - name: Wait for node to be Ready
+        run: |
+          for i in $(seq 1 30); do
+            if kubectl get nodes --no-headers 2>/dev/null | grep -qw Ready; then
+              echo "Node is Ready."
+              kubectl get nodes
+              exit 0
+            fi
+            echo "Waiting for node... ($i/30)"
+            sleep 10
+          done
+          echo "::error::No node reached Ready within 5 minutes"
+          exit 1
+
+      - name: Scale up PostgreSQL first
+        run: kubectl scale statefulset migration-postgresql -n prod --replicas=1
+
+      - name: Wait for PostgreSQL to be Ready
+        run: kubectl wait --for=condition=Ready pod -l app=migration-postgresql -n prod --timeout=180s
+
+      - name: Verify PostgreSQL data survived the sleep cycle
+        run: |
+          COUNT="$(kubectl exec -n prod migration-postgresql-0 -- psql -U migrationuser -d migrationdb -tAc "SELECT count(*) FROM app_users;")"
+          echo "app_users row count: $COUNT"
+          if [ "$COUNT" -lt 1 ]; then
+            echo "::error::app_users table is empty - data did not survive"
+            exit 1
+          fi
+          kubectl exec -n prod migration-postgresql-0 -- psql -U migrationuser -d migrationdb -c "SELECT username, created_at FROM app_users ORDER BY id;"
+
+      - name: Scale up applications
+        run: |
+          kubectl scale deployment migration-app-prod -n prod --replicas=${{ env.APP_REPLICAS }}
+          kubectl scale deployment pong-app -n prod --replicas=${{ env.PONG_REPLICAS }}
+
+      - name: Wait for application rollouts
+        run: |
+          kubectl rollout status deployment/migration-app-prod -n prod --timeout=180s
+          kubectl rollout status deployment/pong-app -n prod --timeout=180s
+
+      - name: Verify Pods, Services, Endpoints, Ingress, PVC
+        run: |
+          echo "--- Pods ---"
+          kubectl get pods -n prod -o wide
+          echo "--- Services ---"
+          kubectl get svc -n prod
+          echo "--- Endpoints ---"
+          kubectl get endpoints -n prod
+          echo "--- Ingress ---"
+          kubectl get ingress -n prod
+          echo "--- PVC ---"
+          kubectl get pvc -n prod
+          test "$(kubectl get pvc postgres-data-migration-postgresql-0 -n prod -o jsonpath='{.status.phase}')" = "Bound"
+          test -n "$(kubectl get endpoints migration-app-prod -n prod -o jsonpath='{.subsets[0].addresses[0].ip}')"
+          test -n "$(kubectl get endpoints pong-app -n prod -o jsonpath='{.subsets[0].addresses[0].ip}')"
+
+      - name: End-to-end HTTP verification
+        run: |
+          IP="$(kubectl get svc ingress-nginx-controller -n ingress-nginx -o jsonpath='{.status.loadBalancer.ingress[0].ip}')"
+          echo "External IP: $IP"
+
+          code_root=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 "http://$IP/")
+          code_pong=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 "http://$IP/pong")
+          code_health=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 "http://$IP/healthz")
+          ready_body=$(curl -s --max-time 15 "http://$IP/readyz")
+          echo "/ -> $code_root, /pong -> $code_pong, /healthz -> $code_health, /readyz -> $ready_body"
+
+          login_body=$(curl -s --max-time 15 -X POST "http://$IP/api/login" -H "Content-Type: application/json" -d '{"identity":"guest","password":"guest"}')
+          token=$(echo "$login_body" | python3 -c "import json,sys; print(json.load(sys.stdin).get('token',''))")
+          echo "guest login token acquired: $([ -n "$token" ] && echo yes || echo no)"
+
+          whoami_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 "http://$IP/api/whoami" -H "Authorization: Bearer $token")
+          echo "/api/whoami -> $whoami_code"
+
+          if [ "$code_root" != "200" ] || [ "$code_pong" != "200" ] || [ "$code_health" != "200" ] || [ -z "$token" ] || [ "$whoami_code" != "200" ]; then
+            echo "::error::End-to-end verification failed"
+            exit 1
+          fi
+          echo "All end-to-end checks passed."
