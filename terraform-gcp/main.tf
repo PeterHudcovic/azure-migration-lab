@@ -164,13 +164,14 @@ resource "google_project_iam_member" "gha_artifact_writer" {
 
 resource "google_project_iam_member" "gha_gke_developer" {
   project = var.project_id
-  # Deliberately container.developer, not container.admin: developer
-  # excludes rbac.authorization.k8s.io management (Role/RoleBinding/
-  # ClusterRole/ClusterRoleBinding), which blocks installing things like an
-  # ingress controller or this app's operations-rbac.yaml from this SA - see
-  # helm/migration-app/values-gcp.yaml for how the GCP clone works around
-  # that (LoadBalancer Service instead of ingress, operations.enabled=false)
-  # rather than widening this role.
+  # container.developer is deliberately the ceiling for this SA: it can
+  # build/push images and run `helm upgrade` for the application workloads,
+  # but cannot patch cluster-scoped or namespaced RBAC objects (Role/
+  # RoleBinding/ClusterRole/ClusterRoleBinding). Those are bootstrapped once
+  # by an administrative identity instead (see
+  # helm/migration-app/templates/operations-rbac.yaml's `manageRbac` gate,
+  # false in values-gcp.yaml, and AUTONOMOUS_MIGRATION_REPORT.md) so the
+  # regular CI/CD deploy identity never needs cluster-admin-adjacent rights.
   role   = "roles/container.developer"
   member = "serviceAccount:${google_service_account.github_actions.email}"
 }

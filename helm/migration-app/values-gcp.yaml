@@ -67,6 +67,11 @@ keyVault:
 
 operations:
   enabled: true
+  # RBAC objects are bootstrapped once by an administrative identity
+  # (see terraform-gcp/ and AUTONOMOUS_MIGRATION_REPORT.md), not by the
+  # GitHub Actions deploy service account, which only holds
+  # roles/container.developer (no cluster-scoped RBAC permissions).
+  manageRbac: false
 
 livenessProbe:
   httpGet:

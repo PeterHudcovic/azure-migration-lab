@@ -1,4 +1,4 @@
-{{- if .Values.operations.enabled }}
+{{- if .Values.operations.manageRbac }}
 # Namespace-scoped operational access for the console ServiceAccount.
 # No wildcard verbs are used.
 apiVersion: rbac.authorization.k8s.io/v1

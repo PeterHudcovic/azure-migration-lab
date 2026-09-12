@@ -53,6 +53,13 @@ keyVault:
 
 operations:
   enabled: false
+  # Whether this chart's own Helm release manages the operations Role/
+  # RoleBinding/ClusterRole/ClusterRoleBinding (templates/operations-rbac.yaml).
+  # Separate from `enabled` so a deploy identity with no cluster-scoped RBAC
+  # permissions can still run the regular application Helm upgrade - see
+  # values-gcp.yaml, where this is set to false and the RBAC objects are
+  # applied once, out of band, by an administrative identity instead.
+  manageRbac: true
 
 ingress:
   enabled: false
