@@ -186,7 +186,14 @@ resource "google_project_iam_custom_role" "gke_node_pool_resizer" {
   role_id     = "gkeNodePoolResizer"
   title       = "GKE Node Pool Resizer"
   description = "Only container.clusters.update, for scaling the node pool to/from 0 (sleep/wake)."
-  permissions = ["container.clusters.update"]
+  permissions = [
+    "container.clusters.update",
+    # Needed to poll the resize operation's status (gcloud does this
+    # automatically after issuing the resize) - without it the resize
+    # itself starts fine but the CLI command fails while waiting on it.
+    "container.operations.get",
+    "container.operations.list",
+  ]
 }
 
 resource "google_project_iam_member" "gha_node_pool_resizer" {
