@@ -2,7 +2,7 @@
 
 **Branch:** `gcp-exact-clone` (Azure `main` untouched throughout)
 **Live URL:** http://34.78.141.61/ (no DNS, no TLS, no Cloudflare — plain HTTP over a public IP, exactly as scoped)
-**Status:** HOTOVO — pipeline green, application verified end-to-end.
+**Status:** HOTOVO — pipeline green, application verified end-to-end. **Currently asleep (0 nodes)** — run **WAKE GCP LAB** before trying to reach the URL (see "SLEEP / WAKE" below).
 
 ## What this is
 
@@ -67,6 +67,21 @@ New, separate from `terraform/` (Azure). Applied with local state (throwaway exp
 
 Roughly the same order as originally estimated: 1× e2-medium node + one GCP Load Balancer + 5Gi persistent disk + Artifact Registry storage ≈ **€2–3/day**, accruing continuously until torn down.
 
+## SLEEP / WAKE (compute cost control without tearing anything down)
+
+Two manual, `workflow_dispatch`-only GitHub Actions workflows scale compute to zero between sessions without deleting the cluster, the LoadBalancer/external IP, Artifact Registry, Terraform state, or any data:
+
+- **SLEEP GCP LAB** (`.github/workflows/sleep-gcp-lab.yml`) — scales `migration-app-prod`, `pong-app`, and the `migration-postgresql` StatefulSet to 0, disables node pool autoscaling if it's ever turned on, resizes the `system` node pool to 0 nodes, and verifies both 0 `kubectl` nodes and 0 backing Compute Engine VMs before finishing. Leaves the PVC, GKE cluster, Artifact Registry, and LoadBalancer/IP untouched.
+- **WAKE GCP LAB** (`.github/workflows/wake-gcp-lab.yml`) — resizes the node pool back to 1 and waits for `Ready`, scales PostgreSQL up *first* and waits for its readiness, verifies the `app_users` table survived the cycle, then scales the applications back to their `values-gcp.yaml` replica counts (1 each) and verifies rollout, Pods/Services/Endpoints/Ingress/PVC, and a full HTTP round trip (`/`, `/pong`, `/healthz`, `/readyz`, guest login, `/api/whoami`).
+
+**IAM:** resizing a node pool needs `container.clusters.update` and `container.operations.get`/`.list`, none of which `roles/container.developer` grants. Rather than reach for `roles/container.admin` or `roles/container.clusterAdmin` (both also grant cluster-scoped RBAC management — exactly what the deploy SA's role is already deliberately scoped to avoid), this added one custom IAM role (`gkeNodePoolResizer`, exactly those three permissions, nothing else) bound only to `github-actions-deploy`.
+
+**GitHub Actions quirk:** `workflow_dispatch` can only be triggered against a non-default branch (`gcp-exact-clone`) if the workflow file also exists on the repository's default branch. Since these two files have no dependency on anything Azure-related and don't run automatically, they were also added, byte-for-byte identical, in a single additive commit on `main` (`46715e2`) — no other file on `main` was touched.
+
+**Actually executed and verified**, not just written: a full `SLEEP → verify 0 nodes → WAKE → end-to-end test → SLEEP → final verify 0 nodes` cycle was run on 2026-09-12 (22:48–23:03 UTC). The first SLEEP attempt caught the missing `container.operations.*` permissions (fixed in Terraform, applied, then re-run clean); every run after that was green on the first try. Result: PostgreSQL's `app_users` table held the identical single row (`petera`, unchanged `created_at`) before and after the cycle; the external IP (`34.78.141.61`) and PVC were never disturbed; final state confirmed independently via `kubectl get nodes` (empty) and `gcloud compute instances list` (empty) — genuinely 0 compute cost while asleep.
+
+**The lab was intentionally left in SLEEP state** at the end of this work. Run **WAKE GCP LAB** from the Actions tab (or `gh workflow run "WAKE GCP LAB" --ref gcp-exact-clone`) before trying to reach `http://34.78.141.61/` again.
+
 ## Cleanup (when you're done experimenting)
 
 ```bash
@@ -95,3 +110,5 @@ Either step alone stops all billing; running both is the cleanest guarantee that
 - `helm/pong-app/templates/deployment.yaml` — minor GCP-image-path compatibility fix
 - `app/Dockerfile` — `apt-get upgrade` at build time
 - `app/static/index.html`, `pong/index.html` — GCP-accurate branding/guide content
+- `.github/workflows/sleep-gcp-lab.yml`, `.github/workflows/wake-gcp-lab.yml` — new (also added, unchanged, to `main` — see "SLEEP / WAKE" above)
+- `terraform-gcp/main.tf` — added the `gkeNodePoolResizer` custom role and its binding
