@@ -88,10 +88,17 @@ jobs:
 
       - name: Deploy pong-app with Helm
         run: |
+          # --force: the Operations Console's scale/restart actions patch this
+          # Deployment via the Kubernetes Python client's server-side apply,
+          # which claims .spec.replicas under the generic "OpenAPI-Generator"
+          # field manager. That conflicts with Helm's own ownership of the
+          # same field on a plain 3-way-merge upgrade; --force resolves it by
+          # replacing (recreating) the resource instead of merging.
           helm upgrade --install pong-app ./helm/pong-app \
             --namespace prod \
             -f ./helm/pong-app/values-gcp.yaml \
-            --set image.tag=${{ github.sha }}
+            --set image.tag=${{ github.sha }} \
+            --force
 
       - name: Verify rollout
         run: |
