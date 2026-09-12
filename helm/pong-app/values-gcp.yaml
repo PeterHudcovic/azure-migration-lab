@@ -3,7 +3,12 @@
 # /pong on the same ingress-nginx-controller public IP as the console,
 # matching the Azure prod topology. Base values.yaml's ingress block
 # (className nginx, rewrite-target regex, path /pong(/|$)(.*)) already
-# has no host restriction on its first rule, so no override is needed here.
+# has no host restriction on its first rule, so no override is needed here
+# except turning off the Azure-only host/TLS rule below - there is no DNS
+# name or certificate for this ingress on GCP, only the raw external IP.
+ingress:
+  azureHost: ""
+
 replicaCount: 1
 
 image:

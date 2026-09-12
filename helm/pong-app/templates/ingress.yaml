@@ -11,10 +11,12 @@ metadata:
 spec:
   ingressClassName: nginx
 
+  {{- if .Values.ingress.azureHost }}
   tls:
     - hosts:
-        - ops.peterhudcovic.tech
+        - {{ .Values.ingress.azureHost }}
       secretName: ops-peterhudcovic-tech-tls
+  {{- end }}
 
   rules:
     - http:
@@ -26,7 +28,8 @@ spec:
                 name: pong-app
                 port:
                   number: 80
-    - host: ops.peterhudcovic.tech
+    {{- if .Values.ingress.azureHost }}
+    - host: {{ .Values.ingress.azureHost }}
       http:
         paths:
           - path: /pong(/|$)(.*)
@@ -36,4 +39,5 @@ spec:
                 name: pong-app
                 port:
                   number: 80
+    {{- end }}
 {{- end }}
